@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>URE Caieiras · Sistema de Observação Educacional</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+  /* ===== IDENTIDADE VISUAL (OMASP) ===== */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --laranja: #ff9800;
+    --laranja-escuro: #e68900;
+    --azul-claro: #f0f7ff;
+    --azul-medio: #1a3e60;
+    --cinza-fundo: #f8fafc;
+    --cinza-borda: #cbd5e1;
+    --cinza-texto: #334155;
+    --branco: #ffffff;
+    --vermelho: #d32f2f;
+    --verde: #2e7d32;
+  }
+
+  body {
+    background: var(--azul-claro);
+    font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+    margin: 0;
+    color: var(--cinza-texto);
+  }
+
+  /* container principal (antes #main agora envolve tudo) */
+  .app-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    background: var(--branco);
+    border-radius: 28px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* HEADER com logo URE (preservado) + visual novo */
+  #header {
+    background: var(--branco);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--cinza-borda);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+  }
+
+  .logo-shield {
+    width: 44px;
+    height: 50px;
+  }
+
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--azul-medio);
+    letter-spacing: -0.3px;
+  }
+
+  .header-sup {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #5f6c80;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .fb-badge {
+    background: #eef2ff;
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--azul-medio);
+    border: 1px solid var(--cinza-borda);
+  }
+
+  /* faixa laranja (substituto da stripe vermelha) */
+  .header-stripe {
+    height: 4px;
+    background: var(--laranja);
+  }
+
+  /* NAVEGAÇÃO (abas) */
+  #nav {
+    background: var(--branco);
+    padding: 0 28px;
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--cinza-borda);
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    padding: 14px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #5f6c80;
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 3px solid transparent;
+    transition: 0.2s;
+  }
+
+  .nav-btn:hover {
+    color: var(--laranja);
+  }
+
+  .nav-btn.active {
+    color: var(--laranja);
+    border-bottom-color: var(--laranja);
+  }
+
+  /* MAIN (conteúdo interno) */
+  #main {
+    padding: 28px;
+  }
+
+  /* CARDS (summary) */
+  .card-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .summary-card {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 20px;
+    padding: 20px 16px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+
+  .summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+
+  .card-icon {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  }
+
+  .card-val {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+
+  .card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #5f6c80;
+    letter-spacing: 0.5px;
+  }
+
+  /* SEÇÕES */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--azul-medio);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: var(--laranja);
+    border-radius: 4px;
+  }
+
+  /* TABELAS */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 20px;
+    border: 1px solid var(--cinza-borda);
+    background: var(--branco);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th {
+    background: #f1f5f9;
+    color: var(--azul-medio);
+    font-weight: 700;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eef2ff;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    height: 34px;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    background: #eef2ff;
+    border: 1px solid var(--cinza-borda);
+  }
+
+  .progress-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+  }
+
+  /* MINI BARRA */
+  .mini-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mini-bar-bg {
+    width: 70px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+  }
+
+  /* BADGES (farol, nível) */
+  .farol-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 40px;
+    padding: 4px 12px;
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+
+  .farol-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .nivel-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 40px;
+  }
+
+  /* FORMULÁRIO estilo OMASP */
+  .form-panel {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 28px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .form-title {
+    color: var(--azul-medio);
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  label.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #5f6c80;
+    letter-spacing: 0.5px;
+  }
+
+  input, select, textarea {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 16px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--laranja);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+  }
+
+  .equiv-box {
+    background: #fef9e6;
+    border: 1px solid #ffe0a3;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    margin-top: 16px;
+  }
+
+  /* BOTÕES */
+  .btn-primary {
+    background: var(--laranja);
+    border: none;
+    border-radius: 40px;
+    padding: 10px 24px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+    box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
+  }
+
+  .btn-primary:hover {
+    background: var(--laranja-escuro);
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 40px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--laranja);
+    color: var(--laranja);
+    background: #fff7ed;
+  }
+
+  .btn-edit, .btn-delete {
+    background: #f1f5f9;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 30px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: 0.2s;
+  }
+
+  .btn-edit:hover {
+    background: #e2e8f0;
+  }
+
+  .btn-delete:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+  }
+
+  /* FILTER ROW */
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 20px;
+    padding: 12px 18px;
+  }
+
+  .filter-row input, .filter-row select {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .count-badge {
+    background: #eef2ff;
+    border-radius: 40px;
+    padding: 6px 14px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* IMPORT PANEL */
+  .import-panel {
+    background: #fef9e6;
+    border: 1px solid #ffe0a3;
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .import-title {
+    font-weight: 800;
+    color: var(--azul-medio);
+    margin-bottom: 10px;
+  }
+
+  code {
+    background: #1e293b;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+  }
+
+  /* LOADING BAR */
+  #loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--laranja);
+    z-index: 999;
+    display: none;
+  }
+
+  /* RESPONSIVO */
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    #header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .nav-btn { font-size: 0.8rem; }
+    #main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="loading-bar"></div>
+<div class="app-container">
+  <!-- HEADER (logo preservado + visual OMASP) -->
+  <div id="header">
+    <div class="header-left">
+      <div class="logo-wrap">
+        <svg class="logo-shield" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="#fff" stroke="rgba(0,0,0,.1)" stroke-width="1"/>
+          <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="#0a2f6c"/>
+          <rect x="2" y="20" width="40" height="10" fill="#d32f2f"/>
+          <text x="22" y="17" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" font-size="9" fill="white" letter-spacing="1">URE</text>
+          <text x="22" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="5.5" fill="white" letter-spacing=".5">CAIEIRAS</text>
+          <text x="22" y="44" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="rgba(255,255,255,.7)">✦</text>
+          <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="header-brand">
+        <div class="header-title">Sistema de Observação de Melhora Educacional</div>
+        <div class="header-sup">Diretoria de Ensino · URE Caieiras · SEE-SP</div>
+      </div>
+    </div>
+    <div class="fb-badge" id="fb-badge">⏳ Iniciando</div>
+  </div>
+  <div class="header-stripe"></div>
+
+  <!-- NAVEGAÇÃO -->
+  <div id="nav">
+    <button class="nav-btn active" onclick="showTab('dashboard')">
+      <i class="fas fa-chart-bar" style="margin-right:7px;"></i>Dashboard
+    </button>
+    <button class="nav-btn" onclick="showTab('meta')">
+      <i class="fas fa-table" style="margin-right:7px;"></i>Meta Análise
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+    <div id="tab-dashboard"></div>
+    <div id="tab-meta" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// FIREBASE CONFIG — substitua pelos dados do seu projeto
+// ═══════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "COLE_SUA_API_KEY_AQUI",
+  authDomain: "COLE_SEU_AUTH_DOMAIN_AQUI",
+  projectId: "COLE_SEU_PROJECT_ID_AQUI",
+  storageBucket: "COLE_SEU_STORAGE_BUCKET_AQUI",
+  messagingSenderId: "COLE_SEU_SENDER_ID_AQUI",
+  appId: "COLE_SEU_APP_ID_AQUI"
+};
+
+// ═══════════════════════════════════════════════
+// DADOS ESTÁTICOS (mesmos do sistema original)
+// ═══════════════════════════════════════════════
+const SCHOOLS = [
+  "CARLOS AUGUSTO DE PADUA FLEURY PROF","PEDRO GALRAO DO NASCIMENTO","WALTHER WEISZFLOG",
+  "FRANCISCO GONCALVES VIEIRA PROF","JOSE ROBERTO MELCHIOR DR","WALTER RIBAS DE ANDRADE PROF EE",
+  "ALFRIED THEODOR WEISZFLOG","ELCIO JOSE PEREIRA COTRIM PROF","JOAQUIM MARQUES DA SILVA SOBRINHO TTE",
+  "ODARICO OLIVEIRA NASCIMENTO PROF","JOSE PARADA PROFESSOR","NAIR HANNICKEL ROMARO",
+  "NIDE ZAIM CARDOSO PROFA","LENITA CORREA CAMARGO PROFA","JARDIM SAO FRANCISCO",
+  "DOMINGOS CAMBIAGHI PROF","ARTHUR WEINGRILL","OTTO WEISZFLOG",
+  "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA","ULYSSES SANCHES RAMIRES PROF","ARMANDO SESTINI",
+  "PEDRO PAULO DE AGUIAR","ALBINO FIORE","OZILDE ALBUQUERQUE PASSARELLA DR",
+  "ELVIRA PARADA MANGA PROFA","ALADINO POLON","LYDIA SCALET WALKER PROFA",
+  "BENEDITO FAGUNDES MARQUES","BUENO DE AZEVEDO FILHO PROF","ALBERTO GRAF CAPITAO",
+  "MARIA ZEZA GOMES DE OLIVEIRA","JOSE CARLOS DA SILVA JUNIOR","BELEM DA SERRA",
+  "IRACI SARTORI VIEIRA DA SILVA PROFA","VINCENZO LOBASSI","APARECIDO ROBERTO TONELLOTTI PROFESSOR",
+  "BENEDITO APARECIDO TAVARES PROF","CHACARA CAMPONESA JARDIM VASSOURAS","JOSE DE BARROS MARTINS EDITOR",
+  "BAIRRO JUNDIAIZINHO","DR. NELSON MANZANARES","ADAIL JARBAS DUCLOS","OLINDO DARTORA DR",
+  "JARDIM SILVIA II","PAULO DUARTE","LUIZ ALEXANDRE DOS SANTOS VEREADOR","ZILTON BICUDO PROF",
+  "DR. MARIO TOLEDO DE MORAES","ISAURA VALENTINI HANSER PROFA","SUZANA DIAS",
+  "ANA MARIA GARRIDO ORLANDIN PROFA","JARDIM ALEGRIA II","ROGERIO LEVORIN PROF",
+  "IVONE DOS ANJOS DA SILVA CAMPOS PROFA","ISAURA DE MIRANDA BOTTO PROFA","PIETRO PETRI",
+  "PARQUE CENTO E VINTE II","JARDIM DAS ROSAS","RITUCO MITANI PROFA",
+  "CELESTINA VALENTE LENGENFELDER PROFA","AZEVEDO SOARES","PEDRO LELIS DE SOUZA PREFEITO",
+  "BAIRRO DO ITAIM","AFONSO MORENO","JOCIMARA VIEIRA DA SILVA PROFA",
+  "ISAIAS LUIZ MATIAZZO","KATIA MARIA TARIFA LEME TONELLI PROFA"
+];
+const ANOS  = ["5º Ano","6º Ano","7º Ano","8º Ano","9º Ano","1ª Série EM","2ª Série EM","3ª Série EM"];
+const TURMAS= ["A","B","C","D","E","F","G","H"];
+const NIVEIS= ["Abaixo do Básico","Básico","Adequado","Avançado"];
+
+const EQUIV = {
+  "5º Ano":      {"Abaixo do Básico":3,   "Básico":4,  "Adequado":5,  "Avançado":6},
+  "6º Ano":      {"Abaixo do Básico":1.5, "Básico":5,  "Adequado":6,  "Avançado":7},
+  "7º Ano":      {"Abaixo do Básico":3,   "Básico":6,  "Adequado":7,  "Avançado":8},
+  "8º Ano":      {"Abaixo do Básico":4,   "Básico":7,  "Adequado":8,  "Avançado":9},
+  "9º Ano":      {"Abaixo do Básico":5,   "Básico":8,  "Adequado":9,  "Avançado":10},
+  "1ª Série EM": {"Abaixo do Básico":5.5, "Básico":9,  "Adequado":10, "Avançado":11},
+  "2ª Série EM": {"Abaixo do Básico":6,   "Básico":10, "Adequado":11, "Avançado":12},
+  "3ª Série EM": {"Abaixo do Básico":7,   "Básico":11, "Adequado":12, "Avançado":13},
+};
+
+const FAROL_COLOR = {verde:"#2e7d32", amarelo:"#e65100", vermelho:"#c62828"};
+const FAROL_BG    = {verde:"#e8f5e9", amarelo:"#fff3e0", vermelho:"#ffebee"};
+const FAROL_BORDER= {verde:"#a5d6a7", amarelo:"#ffcc80", vermelho:"#ef9a9a"};
+const FAROL_LABEL = {verde:"Melhora",  amarelo:"Estagnado", vermelho:"Piora"};
+const FAROL_ICON  = {verde:"▲",        amarelo:"■",          vermelho:"▼"};
+const NIVEL_COLOR = {
+  "Abaixo do Básico":{"c":"#c62828","bg":"#ffebee"},
+  "Básico":           {"c":"#e65100","bg":"#fff3e0"},
+  "Adequado":         {"c":"#1565c0","bg":"#e3f0ff"},
+  "Avançado":         {"c":"#2e7d32","bg":"#e8f5e9"}
+};
+
+function addScore(ano,nivel){ return (EQUIV[ano]&&EQUIV[ano][nivel])?EQUIV[ano][nivel]:0; }
+function ppScore(lp,mat){ return ((parseFloat(lp)||0)+(parseFloat(mat)||0))/2/100*13; }
+function getFarol(nivel,ano,lp,mat){
+  const d=ppScore(lp,mat)-addScore(ano,nivel);
+  return d>0.5?"verde":d<-0.5?"vermelho":"amarelo";
+}
+function equivLabel(ano,nivel){
+  const eq=EQUIV[ano]&&EQUIV[ano][nivel];
+  if(eq===undefined) return "—";
+  if(eq<1) return "Pré-alfabetização";
+  if(eq<=9) return eq+"º Ano EF";
+  return Math.round(eq-9)+"ª Série EM";
+}
+
+// ═══════════════════════════════════════════════
+// STORAGE (Firebase + fallback LocalStorage)
+// ═══════════════════════════════════════════════
+let db=null, useFirebase=false, records=[];
+const LS_KEY="ure_caieiras_v2";
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch{return[]}}
+function lsSave(r){localStorage.setItem(LS_KEY,JSON.stringify(r))}
+
+async function initStorage(){
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.firestore();
+    const snap=await db.collection("meta_analise").orderBy("escola").get();
+    records=snap.docs.map(d=>({id:d.id,...d.data()}));
+    useFirebase=true;
+    document.getElementById("fb-badge").innerHTML = "🔥 Firebase Online";
+  }catch(e){
+    records=lsLoad();
+    useFirebase=false;
+    document.getElementById("fb-badge").innerHTML = "💾 Modo Local";
+  }
+  renderAll();
+}
+async function dbAdd(rec){
+  showLoading(true);
+  if(useFirebase){const ref=await db.collection("meta_analise").add(rec);records.push({id:ref.id,...rec});}
+  else{const nr={...rec,id:Date.now()+"_"+Math.random().toString(36).slice(2)};records.push(nr);lsSave(records);}
+  showLoading(false);
+}
+async function dbUpdate(id,rec){
+  showLoading(true);
+  if(useFirebase){await db.collection("meta_analise").doc(id).update(rec);}
+  const i=records.findIndex(r=>r.id===id);
+  if(i>=0)records[i]={id,...rec};
+  if(!useFirebase)lsSave(records);
+  showLoading(false);
+}
+async function dbDelete(id){
+  if(!confirm("Excluir permanentemente?"))return;
+  showLoading(true);
+  if(useFirebase){await db.collection("meta_analise").doc(id).delete();}
+  records=records.filter(r=>r.id!==id);
+  if(!useFirebase)lsSave(records);
+  showLoading(false);
+  renderAll();
+}
+function showLoading(v){document.getElementById("loading-bar").style.display=v?"block":"none";}
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+let currentTab="dashboard";
+function showTab(t){
+  currentTab=t;
+  document.getElementById("tab-dashboard").style.display=t==="dashboard"?"block":"none";
+  document.getElementById("tab-meta").style.display=t==="meta"?"block":"none";
+  document.querySelectorAll(".nav-btn").forEach((b,i)=>b.classList.toggle("active",(i===0 && t==="dashboard")||(i===1 && t==="meta")));
+  if(t==="dashboard")renderDashboard();else renderMeta();
+}
+function renderAll(){renderDashboard();renderMeta();}
+
+// ========== DASHBOARD (idêntico ao original, apenas visual) ==========
+function renderDashboard(){
+  const el=document.getElementById("tab-dashboard");
+  const analyzed=records.map(r=>({...r,farol:getFarol(r.addNivel,r.anoSerie,r.lpPercent,r.matPercent)}));
+  const tot=analyzed.length;
+  const verde=analyzed.filter(r=>r.farol==="verde").length;
+  const amarelo=analyzed.filter(r=>r.farol==="amarelo").length;
+  const vermelho=analyzed.filter(r=>r.farol==="vermelho").length;
+  const pctMelhora=tot?Math.round(verde/tot*100):0;
+
+  if(tot===0){
+    el.innerHTML=`<div class="empty-state"><div class="big">📊</div>Nenhum dado disponível. Vá em "Meta Análise" para adicionar.</div>`;
+    return;
+  }
+
+  const byAno={};
+  analyzed.forEach(r=>{if(!byAno[r.anoSerie])byAno[r.anoSerie]={verde:0,amarelo:0,vermelho:0};byAno[r.anoSerie][r.farol]++;});
+  const byEsc={};
+  analyzed.forEach(r=>{if(!byEsc[r.escola])byEsc[r.escola]={verde:0,amarelo:0,vermelho:0};byEsc[r.escola][r.farol]++;});
+  const escSorted=Object.entries(byEsc).sort((a,b)=>{
+    const ta=a[1].verde+a[1].amarelo+a[1].vermelho,tb=b[1].verde+b[1].amarelo+b[1].vermelho;
+    return(b[1].verde/tb)-(a[1].verde/ta);
+  });
+
+  el.innerHTML=`
+  <div class="card-row">
+    ${card("👥","Estudantes",tot,"#1a3e60")}
+    ${card("▲","Melhora",verde,"#2e7d32")}
+    ${card("■","Estagnado",amarelo,"#e65100")}
+    ${card("▼","Piora",vermelho,"#c62828")}
+    ${card("📈","Taxa de Melhora",pctMelhora+"%","#ff9800")}
+  </div>
+  <div class="section"><div class="section-title">Distribuição Geral por Farol</div>
+  <div class="progress-wrap">
+    ${pSeg(verde,tot,"#2e7d32","Melhora")}
+    ${pSeg(amarelo,tot,"#e65100","Estagnado")}
+    ${pSeg(vermelho,tot,"#c62828","Piora")}
+  </div>
+  <div class="legend"><div class="legend-item"><span class="legend-dot" style="background:#2e7d32"></span>Melhora (${verde})</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#e65100"></span>Estagnado (${amarelo})</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#c62828"></span>Piora (${vermelho})</div></div></div>
+
+  <div class="section"><div class="section-title">Por Ano / Série</div>
+  <div class="table-wrap"><table><thead><tr><th>Ano / Série</th><th>▲ Melhora</th><th>■ Estagnado</th><th>▼ Piora</th><th>Total</th><th>% Melhora</th></tr></thead>
+  <tbody>${ANOS.filter(a=>byAno[a]).map(a=>{let v=byAno[a],t2=v.verde+v.amarelo+v.vermelho,p=Math.round(v.verde/t2*100);return`<tr><td><strong>${a}</strong></td><td style="color:#2e7d32">${v.verde}</td><td style="color:#e65100">${v.amarelo}</td><td style="color:#c62828">${v.vermelho}</td><td>${t2}</td><td><div class="mini-bar-wrap"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${p}%;background:${p>=60?"#2e7d32":p>=30?"#e65100":"#c62828"}"></div></div><span>${p}%</span></div></td></tr>`}).join("")}</tbody></table></div></div>
+
+  <div class="section"><div class="section-title">Por Escola</div>
+  <div class="table-wrap"><table><thead><tr><th>Escola</th><th>▲ Melhora</th><th>■ Estagnado</th><th>▼ Piora</th><th>% Melhora</th></tr></thead>
+  <tbody>${escSorted.map(([esc,v])=>{let t2=v.verde+v.amarelo+v.vermelho,p=Math.round(v.verde/t2*100);return`<tr><td>${esc}</td><td style="color:#2e7d32">${v.verde}</td><td style="color:#e65100">${v.amarelo}</td><td style="color:#c62828">${v.vermelho}</td><td><div class="mini-bar-wrap"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${p}%;background:${p>=60?"#2e7d32":p>=30?"#e65100":"#c62828"}"></div></div><span>${p}%</span></div></td></tr>`}).join("")}</tbody></table></div></div>
+
+  <div class="section"><div class="section-title">Lista Completa de Estudantes</div>
+  <div class="table-wrap"><table><thead><tr><th>Farol</th><th>Escola</th><th>Ano/Série</th><th>Turma</th><th>Professor</th><th>Nível ADD</th><th>LP %</th><th>Mat %</th><th>Equiv. ADD</th><th>Score ADD</th><th>Score PP</th><th>Perfil</th><th>Obs</th></tr></thead>
+  <tbody>${analyzed.map(r=>{let f=r.farol,sa=addScore(r.anoSerie,r.addNivel).toFixed(1),sp=ppScore(r.lpPercent,r.matPercent).toFixed(1);return`<tr><td><span class="farol-badge" style="color:${FAROL_COLOR[f]};background:${FAROL_BG[f]};border-color:${FAROL_BORDER[f]}">${FAROL_ICON[f]} ${FAROL_LABEL[f]}</span></td><td>${r.escola}</td><td>${r.anoSerie}</td><td>${r.turma}</td><td>${r.professor||"—"}</td><td><span class="nivel-badge" style="color:${NIVEL_COLOR[r.addNivel]?.c};background:${NIVEL_COLOR[r.addNivel]?.bg}">${r.addNivel}</span></td><td>${r.lpPercent}%</td><td>${r.matPercent}%</td><td>${equivLabel(r.anoSerie,r.addNivel)}</td><td>${sa}</td><td>${sp}</td><td>${r.perfilAbaixoBasico||"—"}</td><td>${r.obs||"—"}</td></tr>`}).join("")}</tbody></table></div></div>`;
+}
+
+function card(icon,label,val,color){
+  return`<div class="summary-card"><div class="card-icon" style="color:${color}">${icon}</div><div class="card-val" style="color:${color}">${val}</div><div class="card-label">${label}</div></div>`;
+}
+function pSeg(n,tot,color,lbl){ if(!n)return""; let p=Math.round(n/tot*100); return`<div class="progress-seg" style="width:${p}%;background:${color}" title="${lbl}: ${n}">${p}%</div>`; }
+
+// ========== META ANÁLISE (mesma lógica, apenas visual) ==========
+let editId=null,showForm=false,showImport=false,searchVal="",filterAno="",filterEsc="";
+
+function renderMeta(){
+  const el=document.getElementById("tab-meta");
+  const filtered=records.filter(r=>{
+    const s=searchVal.toLowerCase();
+    const ms=!s||[r.escola,r.professor,r.turma].some(v=>(v||"").toLowerCase().includes(s));
+    return ms&&(!filterAno||r.anoSerie===filterAno)&&(!filterEsc||r.escola===filterEsc);
+  });
+
+  el.innerHTML=`
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+    <div class="section-title" style="margin:0">Meta Análise — Registros</div>
+    <div class="btn-row" style="display:flex;gap:10px;">
+      <button class="btn-secondary" onclick="toggleImport()"><i class="fas fa-file-import"></i> Importar Lista</button>
+      <button class="btn-primary" onclick="toggleForm()">${showForm&&!editId?'<i class="fas fa-times"></i> Fechar':'<i class="fas fa-plus"></i> Novo Registro'}</button>
+    </div>
+  </div>
+  ${showImport?renderImportPanel():""}
+  ${showForm?renderForm():""}
+  <div class="filter-row">
+    <input type="text" placeholder="🔍 Buscar escola, professor, turma..." value="${searchVal}" oninput="searchVal=this.value;renderMeta()"/>
+    <select onchange="filterAno=this.value;renderMeta()"><option value="">Todos os anos</option>${ANOS.map(a=>`<option value="${a}"${filterAno===a?" selected":""}>${a}</option>`).join("")}</select>
+    <select onchange="filterEsc=this.value;renderMeta()"><option value="">Todas as escolas</option>${SCHOOLS.map(s=>`<option value="${s}"${filterEsc===s?" selected":""}>${s.slice(0,40)}</option>`).join("")}</select>
+    <span class="count-badge">${filtered.length} registro(s)</span>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Farol</th><th>Escola</th><th>Ano/Série</th><th>Turma</th><th>Professor</th><th>Nível ADD</th><th>LP %</th><th>Mat %</th><th>Perfil</th><th>Obs</th><th>Ações</th></tr></thead>
+  <tbody>${filtered.length===0?`<tr><td colspan="11" style="text-align:center">Nenhum registro encontrado</td></tr>`:filtered.map(r=>{let f=getFarol(r.addNivel,r.anoSerie,r.lpPercent,r.matPercent);return`<tr><td><div class="farol-dot" style="color:${FAROL_COLOR[f]};border-color:${FAROL_BORDER[f]};background:${FAROL_BG[f]}">${FAROL_ICON[f]}</div></td><td>${r.escola}</td><td>${r.anoSerie}</td><td>${r.turma}</td><td>${r.professor||"—"}</td><td><span class="nivel-badge" style="color:${NIVEL_COLOR[r.addNivel]?.c};background:${NIVEL_COLOR[r.addNivel]?.bg}">${r.addNivel}</span></td><td>${r.lpPercent}%</td><td>${r.matPercent}%</td><td>${r.perfilAbaixoBasico||"—"}</td><td>${r.obs||"—"}</td><td><button class="btn-edit" onclick="startEdit('${r.id}')"><i class="fas fa-pencil"></i></button> <button class="btn-delete" onclick="dbDelete('${r.id}').then(()=>renderAll())"><i class="fas fa-trash"></i></button></td></tr>`}).join("")}</tbody></table></div>`;
+}
+
+function renderForm(){
+  const r=editId?(records.find(x=>x.id===editId)||{}):{};
+  const eqLabel=r.addNivel&&r.anoSerie?equivLabel(r.anoSerie,r.addNivel):"—";
+  let farolPreview="";
+  if(r.addNivel&&r.anoSerie&&r.lpPercent&&r.matPercent){
+    const f=getFarol(r.addNivel,r.anoSerie,r.lpPercent,r.matPercent);
+    farolPreview=` &nbsp;·&nbsp; Farol: <strong style="color:${FAROL_COLOR[f]}">${FAROL_ICON[f]} ${FAROL_LABEL[f]}</strong>`;
+  }
+  return`<div class="form-panel"><div class="form-title">${editId?"✏️ Editar Registro":"➕ Novo Registro"}</div>
+  <div class="form-grid">
+    <label class="field">Escola *<select id="f-escola" onchange="livePreview()"><option value="">— Selecionar —</option>${SCHOOLS.map(s=>`<option value="${s}"${r.escola===s?" selected":""}>${s}</option>`).join("")}</select></label>
+    <label class="field">Ano/Série *<select id="f-ano" onchange="livePreview()"><option value="">— Selecionar —</option>${ANOS.map(a=>`<option value="${a}"${r.anoSerie===a?" selected":""}>${a}</option>`).join("")}</select></label>
+    <label class="field">Turma *<select id="f-turma"><option value="">— Selecionar —</option>${TURMAS.map(t=>`<option value="${t}"${r.turma===t?" selected":""}>${t}</option>`).join("")}</select></label>
+    <label class="field">Professor<input id="f-prof" type="text" value="${r.professor||""}" placeholder="Nome do professor"/></label>
+    <label class="field">Nível ADD<select id="f-nivel" onchange="livePreview()"><option value="">— Selecionar —</option>${NIVEIS.map(n=>`<option value="${n}"${r.addNivel===n?" selected":""}>${n}</option>`).join("")}</select></label>
+    <label class="field">LP (%)<input id="f-lp" type="number" min="0" max="100" value="${r.lpPercent||""}" oninput="livePreview()"/></label>
+    <label class="field">Mat (%)<input id="f-mat" type="number" min="0" max="100" value="${r.matPercent||""}" oninput="livePreview()"/></label>
+    <label class="field">Perfil (>50% abaixo?)<select id="f-perfil"><option value="Sim"${r.perfilAbaixoBasico==="Sim"?" selected":""}>Sim</option><option value="Não"${r.perfilAbaixoBasico==="Não"?" selected":""}>Não</option></select></label>
+  </div>
+  <div class="equiv-box"><strong>Aprendizagem equivalente:</strong> <span id="equiv-label">${eqLabel}</span><span id="farol-preview">${farolPreview}</span></div>
+  <label class="field" style="margin-top:16px">Observações<textarea id="f-obs" rows="2">${r.obs||""}</textarea></label>
+  <div style="display:flex;gap:10px;margin-top:20px"><button class="btn-primary" onclick="submitForm()">${editId?"Salvar Alterações":"Adicionar"}</button><button class="btn-secondary" onclick="cancelForm()">Cancelar</button></div></div>`;
+}
+
+function renderImportPanel(){
+  return`<div class="import-panel"><div class="import-title"><i class="fas fa-file-import"></i> Importar via Lista (separador ; )</div>
+  <div class="import-hint">Formato: escola ; anoSerie ; turma ; professor ; addNivel ; lpPercent ; matPercent ; perfilAbaixoBasico ; obs<br><small>Exemplo: WALTHER WEISZFLOG ; 6º Ano ; A ; João Silva ; Abaixo do Básico ; 42 ; 38 ; Sim ; Observação</small></div>
+  <textarea id="import-text" rows="6" placeholder="Cole as linhas..."></textarea>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn-primary" onclick="doImport()">Importar</button><button class="btn-secondary" onclick="toggleImport()">Cancelar</button></div></div>`;
+}
+
+function livePreview(){
+  const ano=document.getElementById("f-ano")?.value, nivel=document.getElementById("f-nivel")?.value;
+  const lp=document.getElementById("f-lp")?.value, mat=document.getElementById("f-mat")?.value;
+  const eqSpan=document.getElementById("equiv-label");
+  if(eqSpan) eqSpan.innerText = (nivel&&ano)?equivLabel(ano,nivel):"—";
+  const fp=document.getElementById("farol-preview");
+  if(fp && nivel&&ano&&lp&&mat){
+    const f=getFarol(nivel,ano,lp,mat);
+    fp.innerHTML=` &nbsp;·&nbsp; Farol: <strong style="color:${FAROL_COLOR[f]}">${FAROL_ICON[f]} ${FAROL_LABEL[f]}</strong>`;
+  } else if(fp) fp.innerHTML="";
+}
+
+async function submitForm(){
+  const rec={escola:document.getElementById("f-escola").value,anoSerie:document.getElementById("f-ano").value,turma:document.getElementById("f-turma").value,professor:document.getElementById("f-prof").value.trim(),addNivel:document.getElementById("f-nivel").value,lpPercent:document.getElementById("f-lp").value,matPercent:document.getElementById("f-mat").value,perfilAbaixoBasico:document.getElementById("f-perfil").value,obs:document.getElementById("f-obs").value.trim()};
+  if(!rec.escola||!rec.anoSerie||!rec.turma){alert("Preencha Escola, Ano e Turma.");return;}
+  if(editId) await dbUpdate(editId,rec);
+  else await dbAdd(rec);
+  cancelForm(); renderAll();
+}
+function startEdit(id){editId=id;showForm=true;renderMeta();}
+function cancelForm(){editId=null;showForm=false;renderMeta();}
+function toggleForm(){showForm=!showForm;editId=null;renderMeta();}
+function toggleImport(){showImport=!showImport;renderMeta();}
+async function doImport(){
+  const text=document.getElementById("import-text")?.value||"";
+  for(const line of text.trim().split("\n").filter(l=>l.trim())){
+    const parts=line.split(";").map(p=>p.trim());
+    const[escola,anoSerie,turma,professor,addNivel,lpPercent,matPercent,perfilAbaixoBasico,...obsArr]=parts;
+    if(escola&&anoSerie&&turma) await dbAdd({escola,anoSerie,turma,professor:professor||"",addNivel:addNivel||"",lpPercent:lpPercent||"",matPercent:matPercent||"",perfilAbaixoBasico:perfilAbaixoBasico||"Não",obs:obsArr.join(";")});
+  }
+  showImport=false; renderAll();
+}
+
+initStorage();
+</script>
+</body>
+</html>
