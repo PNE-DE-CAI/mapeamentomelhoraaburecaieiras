@@ -85,7 +85,7 @@
     <button class="tab-btn" data-tab="meta"><i class="fas fa-edit"></i> Meta-Análise</button>
   </div>
 
-  <!-- DASHBOARD -->
+  <!-- DASHBOARD (igual ao original) -->
   <div id="dashboard" class="tab-content active">
     <div class="info-box">
       <i class="fas fa-info-circle"></i> <strong>Referência de equivalência SEE-SP (3 níveis):</strong>
@@ -151,6 +151,7 @@
 
   <!-- META-ANÁLISE (CRUD + DESCRITOR + INSERÇÃO EM LOTE) -->
   <div id="meta" class="tab-content">
+    <!-- Formulário de cadastro de estudante (inalterado) -->
     <div class="card">
       <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Cadastro / Edição de Estudante</h3>
       <form id="studentForm" class="form-grid">
@@ -180,7 +181,7 @@
       </form>
     </div>
 
-    <!-- Inserção em lote via campo de texto (CSV) -->
+    <!-- Inserção em lote (inalterado) -->
     <div class="card">
       <h3><i class="fas fa-cloud-upload-alt"></i> Inserção em Lote (CSV via texto)</h3>
       <div style="margin-bottom: 1rem;">
@@ -197,7 +198,7 @@
       <div id="loteFeedback" style="margin-top: 10px; font-size: 0.8rem; color: #2c5f8a;"></div>
     </div>
 
-    <!-- Registro do Descritor/Habilidade de menor acerto (Prova Paulista) -->
+    <!-- DESCRITOR / HABILIDADE DE MENOR ACERTO – COM EDIÇÃO MELHORADA -->
     <div class="card">
       <h3><i class="fas fa-chalkboard-user"></i> Descritor / Habilidade com menor índice de acerto (Prova Paulista 1° Bim)</h3>
       <div class="form-grid" style="margin-top: 12px;">
@@ -205,12 +206,23 @@
         <select id="descritorAno" onchange="carregarDescritor()"><option value="">Todos os Anos</option></select>
         <select id="descritorTurma" onchange="carregarDescritor()"><option value="">Todas as Turmas</option></select>
         <textarea id="descritorTexto" rows="2" placeholder="Ex: D13 - Interpretar gráficos; Habilidade EF07MA33 - baixo desempenho"></textarea>
-        <button class="btn" onclick="salvarDescritor()"><i class="fas fa-save"></i> Salvar descritor para este filtro</button>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn" onclick="salvarDescritor()"><i class="fas fa-save"></i> Salvar / Atualizar Descritor</button>
+        </div>
       </div>
-      <small><i class="fas fa-info-circle"></i> Registre aqui o descritor ou habilidade de menor acerto com base nos dados da Prova Paulista. O campo é salvo por combinação de escola/ano/turma.</small>
+      <small><i class="fas fa-info-circle"></i> Selecione escola, ano e turma e escreva o descritor. Clique em "Salvar / Atualizar" para criar ou editar.</small>
+
+      <!-- NOVA SEÇÃO: LISTA DE DESCRITORES SALVOS PARA EDIÇÃO RÁPIDA -->
+      <div style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+        <label><strong><i class="fas fa-list"></i> Descritores já cadastrados (clique para editar):</strong></label>
+        <select id="listaDescritores" class="form-control" style="margin-top: 8px;" onchange="carregarDescritorPorSelecao()">
+          <option value="">-- Selecione um descritor para editar --</option>
+        </select>
+        <button class="btn" style="background: #2c5f8a; margin-top: 8px;" onclick="recarregarListaDescritores()"><i class="fas fa-sync-alt"></i> Recarregar lista</button>
+      </div>
     </div>
 
-    <!-- Filtros para o Boletim (Turma filtrada) -->
+    <!-- Filtros para o Boletim (inalterado) -->
     <div class="card">
       <h3><i class="fas fa-print"></i> Gerar Boletim da Turma</h3>
       <div class="form-grid">
@@ -239,86 +251,40 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBrjM1C840QnWGQIrInvCAjnNBQuSVqy78",
-  authDomain: "financeiroescola-587af.firebaseapp.com",
-  projectId: "financeiroescola-587af",
-  storageBucket: "financeiroescola-587af.firebasestorage.app",
-  messagingSenderId: "55720778459",
-  appId: "1:55720778459:web:0bdd1d9acdd2d4bf398afe"
-};
+  // Firebase config (já fornecida)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrjM1C840QnWGQIrInvCAjnNBQuSVqy78",
+    authDomain: "financeiroescola-587af.firebaseapp.com",
+    projectId: "financeiroescola-587af",
+    storageBucket: "financeiroescola-587af.firebasestorage.app",
+    messagingSenderId: "55720778459",
+    appId: "1:55720778459:web:0bdd1d9acdd2d4bf398afe"
+  };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // ======================= LISTAS OFICIAIS URE-CAIEIRAS ==================
+  // ======================= LISTAS OFICIAIS ==================
   const escolasOficiais = [
-    "ADAIL JARBAS DUCLOS",
-    "AFONSO MORENO",
-    "ALADINO POLON",
-    "ALBERTO GRAF CAPITAO",
-    "ALBINO FIORE",
-    "ALFRIED THEODOR WEISZFLOG",
-    "ANA MARIA GARRIDO ORLANDIN PROFA",
-    "APARECIDO ROBERTO TONELLOTTI PROFESSOR",
-    "ARMANDO SESTINI",
-    "ARTHUR WEINGRILL",
-    "AZEVEDO SOARES",
-    "BAIRRO DO ITAIM",
-    "BAIRRO JUNDIAIZINHO",
-    "BELEM DA SERRA",
-    "BENEDITO APARECIDO TAVARES PROF",
-    "BENEDITO FAGUNDES MARQUES",
-    "BUENO DE AZEVEDO FILHO PROF",
-    "CARLOS AUGUSTO DE PADUA FLEURY PROF",
-    "CELESTINA VALENTE LENGENFELDER PROFA",
-    "CHACARA CAMPONESA JARDIM VASSOURAS",
-    "DOMINGOS CAMBIAGHI PROF",
-    "DR. MARIO TOLEDO DE MORAES",
-    "DR. NELSON MANZANARES",
-    "ELCIO JOSE PEREIRA COTRIM PROF",
-    "ELVIRA PARADA MANGA PROFA",
-    "FRANCISCO GONCALVES VIEIRA PROF",
-    "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA",
-    "IRACI SARTORI VIEIRA DA SILVA PROFA",
-    "ISAIAS LUIZ MATIAZZO",
-    "ISAURA DE MIRANDA BOTTO PROFA",
-    "ISAURA VALENTINI HANSER PROFA",
-    "IVONE DOS ANJOS DA SILVA CAMPOS PROFA",
-    "JARDIM ALEGRIA II",
-    "JARDIM DAS ROSAS",
-    "JARDIM SAO FRANCISCO",
-    "JARDIM SILVIA II",
-    "JOAQUIM MARQUES DA SILVA SOBRINHO TTE",
-    "JOCIMARA VIEIRA DA SILVA PROFA",
-    "JOSE CARLOS DA SILVA JUNIOR",
-    "JOSE DE BARROS MARTINS EDITOR",
-    "JOSE PARADA PROFESSOR",
-    "JOSE ROBERTO MELCHIOR DR",
-    "KATIA MARIA TARIFA LEME TONELLI PROFA",
-    "LENITA CORREA CAMARGO PROFA",
-    "LUIZ ALEXANDRE DOS SANTOS VEREADOR",
-    "LYDIA SCALET WALKER PROFA",
-    "MARIA ZEZA GOMES DE OLIVEIRA",
-    "NAIR HANNICKEL ROMARO",
-    "NIDE ZAIM CARDOSO PROFA",
-    "ODARICO OLIVEIRA NASCIMENTO PROF",
-    "OLINDO DARTORA DR",
-    "OTTO WEISZFLOG",
-    "OZILDE ALBUQUERQUE PASSARELLA DR",
-    "PARQUE CENTO E VINTE II",
-    "PAULO DUARTE",
-    "PEDRO GALRAO DO NASCIMENTO",
-    "PEDRO LELIS DE SOUZA PREFEITO",
-    "PEDRO PAULO DE AGUIAR",
-    "PIETRO PETRI",
-    "RITUCO MITANI PROFA",
-    "ROGERIO LEVORIN PROF",
-    "SUZANA DIAS",
-    "ULYSSES SANCHES RAMIRES PROF",
-    "VINCENZO LOBASSI",
-    "WALTER RIBAS DE ANDRADE PROF EE",
-    "WALTHER WEISZFLOG",
+    "ADAIL JARBAS DUCLOS", "AFONSO MORENO", "ALADINO POLON", "ALBERTO GRAF CAPITAO",
+    "ALBINO FIORE", "ALFRIED THEODOR WEISZFLOG", "ANA MARIA GARRIDO ORLANDIN PROFA",
+    "APARECIDO ROBERTO TONELLOTTI PROFESSOR", "ARMANDO SESTINI", "ARTHUR WEINGRILL",
+    "AZEVEDO SOARES", "BAIRRO DO ITAIM", "BAIRRO JUNDIAIZINHO", "BELEM DA SERRA",
+    "BENEDITO APARECIDO TAVARES PROF", "BENEDITO FAGUNDES MARQUES", "BUENO DE AZEVEDO FILHO PROF",
+    "CARLOS AUGUSTO DE PADUA FLEURY PROF", "CELESTINA VALENTE LENGENFELDER PROFA",
+    "CHACARA CAMPONESA JARDIM VASSOURAS", "DOMINGOS CAMBIAGHI PROF", "DR. MARIO TOLEDO DE MORAES",
+    "DR. NELSON MANZANARES", "ELCIO JOSE PEREIRA COTRIM PROF", "ELVIRA PARADA MANGA PROFA",
+    "FRANCISCO GONCALVES VIEIRA PROF", "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA",
+    "IRACI SARTORI VIEIRA DA SILVA PROFA", "ISAIAS LUIZ MATIAZZO", "ISAURA DE MIRANDA BOTTO PROFA",
+    "ISAURA VALENTINI HANSER PROFA", "IVONE DOS ANJOS DA SILVA CAMPOS PROFA", "JARDIM ALEGRIA II",
+    "JARDIM DAS ROSAS", "JARDIM SAO FRANCISCO", "JARDIM SILVIA II", "JOAQUIM MARQUES DA SILVA SOBRINHO TTE",
+    "JOCIMARA VIEIRA DA SILVA PROFA", "JOSE CARLOS DA SILVA JUNIOR", "JOSE DE BARROS MARTINS EDITOR",
+    "JOSE PARADA PROFESSOR", "JOSE ROBERTO MELCHIOR DR", "KATIA MARIA TARIFA LEME TONELLI PROFA",
+    "LENITA CORREA CAMARGO PROFA", "LUIZ ALEXANDRE DOS SANTOS VEREADOR", "LYDIA SCALET WALKER PROFA",
+    "MARIA ZEZA GOMES DE OLIVEIRA", "NAIR HANNICKEL ROMARO", "NIDE ZAIM CARDOSO PROFA",
+    "ODARICO OLIVEIRA NASCIMENTO PROF", "OLINDO DARTORA DR", "OTTO WEISZFLOG", "OZILDE ALBUQUERQUE PASSARELLA DR",
+    "PARQUE CENTO E VINTE II", "PAULO DUARTE", "PEDRO GALRAO DO NASCIMENTO", "PEDRO LELIS DE SOUZA PREFEITO",
+    "PEDRO PAULO DE AGUIAR", "PIETRO PETRI", "RITUCO MITANI PROFA", "ROGERIO LEVORIN PROF", "SUZANA DIAS",
+    "ULYSSES SANCHES RAMIRES PROF", "VINCENZO LOBASSI", "WALTER RIBAS DE ANDRADE PROF EE", "WALTHER WEISZFLOG",
     "ZILTON BICUDO PROF"
   ];
   const anosSeries = ["5° Ano","6° Ano","7° Ano","8° Ano","9° Ano","1ª Série","2ª Série","3ª Série"];
@@ -340,13 +306,12 @@ const firebaseConfig = {
     fill('descritorEscola', ['', ...escolasOficiais]);
     fill('descritorAno', ['', ...anosSeries]);
     fill('descritorTurma', ['', ...turmasLista]);
-    // Filtros do boletim
     fill('boletimEscola', escolasOficiais);
     fill('boletimAno', anosSeries);
     fill('boletimTurma', turmasLista);
   }
 
-  // FAROL com limites: abaixo <35%, básico 35-84%, proficiente >=85%
+  // Função getFarol (igual)
   function getFarol(addStatus, ppPct) {
     if(!addStatus || ppPct === null || ppPct === undefined || ppPct === "") return { cor: 'gray', texto: 'S/D' };
     ppPct = parseFloat(ppPct);
@@ -443,7 +408,7 @@ const firebaseConfig = {
     document.getElementById('melhoraAmbasList').innerHTML = melhoraAmbas.length ? melhoraAmbas.map(n => `<span class="student-tag">${n}</span>`).join('') : '<span style="color:#64748b">Nenhum estudante</span>';
   }
 
-  // CRUD
+  // CRUD de estudantes (inalterado)
   const form = document.getElementById('studentForm');
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -558,6 +523,7 @@ const firebaseConfig = {
   }
   function limparCampoLote() { document.getElementById('bulkData').value = ""; document.getElementById('loteFeedback').innerHTML = ""; }
 
+  // ======================= FUNÇÕES PARA DESCRITOR – COM EDIÇÃO =======================
   async function carregarDescritor() {
     const escola = document.getElementById('descritorEscola').value;
     const ano = document.getElementById('descritorAno').value;
@@ -568,6 +534,7 @@ const firebaseConfig = {
     const docSnap = await docRef.get();
     document.getElementById('descritorTexto').value = docSnap.exists ? docSnap.data().texto : '';
   }
+
   async function salvarDescritor() {
     const escola = document.getElementById('descritorEscola').value;
     const ano = document.getElementById('descritorAno').value;
@@ -576,10 +543,49 @@ const firebaseConfig = {
     if(!escola || !ano || !turma) { showToast("Selecione escola, ano e turma."); return; }
     const filterKey = `${escola}|${ano}|${turma}`;
     await db.collection('descritores_prova_paulista').doc(filterKey).set({ texto, escola, ano, turma, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    showToast("Descritor salvo!");
+    showToast("Descritor salvo/atualizado!");
+    recarregarListaDescritores();  // atualiza a lista de descritores
   }
 
-  // Função para carregar descritor nos filtros do boletim
+  // Carrega a lista de descritores salvos no select
+  async function recarregarListaDescritores() {
+    const snap = await db.collection('descritores_prova_paulista').get();
+    const select = document.getElementById('listaDescritores');
+    select.innerHTML = '<option value="">-- Selecione um descritor para editar --</option>';
+    snap.forEach(doc => {
+      const data = doc.data();
+      const label = `${data.escola} | ${data.ano} | ${data.turma}`;
+      const option = document.createElement('option');
+      option.value = doc.id;
+      option.textContent = label;
+      option.setAttribute('data-escola', data.escola);
+      option.setAttribute('data-ano', data.ano);
+      option.setAttribute('data-turma', data.turma);
+      option.setAttribute('data-texto', data.texto);
+      select.appendChild(option);
+    });
+  }
+
+  // Ao selecionar um descritor na lista, preenche os filtros e o textarea para edição
+  function carregarDescritorPorSelecao() {
+    const select = document.getElementById('listaDescritores');
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption.value) return;
+    const escola = selectedOption.getAttribute('data-escola');
+    const ano = selectedOption.getAttribute('data-ano');
+    const turma = selectedOption.getAttribute('data-turma');
+    const texto = selectedOption.getAttribute('data-texto');
+    if (escola && ano && turma) {
+      document.getElementById('descritorEscola').value = escola;
+      document.getElementById('descritorAno').value = ano;
+      document.getElementById('descritorTurma').value = turma;
+      document.getElementById('descritorTexto').value = texto || '';
+      // Opcional: disparar event change para garantir
+      carregarDescritor(); // já carrega, mas como já temos texto, não precisa
+    }
+  }
+
+  // Funções para boletim (inalteradas)
   let descritorBoletimGlobal = "";
   async function carregarDescritorBoletim() {
     const escola = document.getElementById('boletimEscola').value;
@@ -592,7 +598,6 @@ const firebaseConfig = {
     descritorBoletimGlobal = docSnap.exists ? docSnap.data().texto : "Não registrado";
   }
 
-  // GERAR BOLETIM (usando os filtros específicos da Meta-Análise)
   async function gerarBoletim() {
     const esc = document.getElementById('boletimEscola').value;
     const ano = document.getElementById('boletimAno').value;
@@ -601,7 +606,6 @@ const firebaseConfig = {
       showToast("Selecione uma escola, ano e turma específicos para gerar o boletim.");
       return;
     }
-    // Recarregar descritor para garantir
     await carregarDescritorBoletim();
     let ref = db.collection('ure_caieiras');
     ref = ref.where('escola', '==', esc).where('anoSerie', '==', ano).where('turma', '==', turma);
@@ -680,7 +684,7 @@ const firebaseConfig = {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
-    if(tabId === 'dashboard') loadDashboard(); else loadCRUD();
+    if(tabId === 'dashboard') loadDashboard(); else { loadCRUD(); recarregarListaDescritores(); }
   }
 
   function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
@@ -693,6 +697,7 @@ const firebaseConfig = {
   initDropdowns();
   loadCRUD();
   loadDashboard();
+  recarregarListaDescritores();  // carrega a lista de descritores ao iniciar
 </script>
 </body>
 </html>
