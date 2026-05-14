@@ -1,954 +1,332 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>URE Caieiras · Sistema de Observação Educacional</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<style>
-/* ── RESET & BASE ──────────────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --red:      #d32f2f;
-  --red-dark: #b71c1c;
-  --red-light:#ffebee;
-  --blue:     #0a2f6c;
-  --blue-mid: #1565c0;
-  --blue-light:#e3f0ff;
-  --gray-50:  #f8f9fb;
-  --gray-100: #f0f2f5;
-  --gray-200: #e0e4e9;
-  --gray-300: #c8cdd6;
-  --gray-400: #9aa0ac;
-  --gray-500: #6b7280;
-  --gray-700: #374151;
-  --gray-900: #111827;
-  --white:    #ffffff;
-  --green:    #2e7d32;
-  --amber:    #e65100;
-}
-body{
-  background:var(--gray-50);
-  color:var(--gray-900);
-  font-family:'Inter',sans-serif;
-  min-height:100vh;
-  font-size:14px;
-  line-height:1.5
-}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--gray-100)}
-::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:3px}
-
-/* ── HEADER ────────────────────────────────────────────── */
-#header{
-  background:var(--blue);
-  padding:0 28px;
-  display:flex;align-items:stretch;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 12px rgba(10,47,108,.25);
-  min-height:64px
-}
-.header-left{display:flex;align-items:center;gap:16px}
-
-/* Logo SVG inline — escudo URE Caieiras */
-.logo-wrap{
-  display:flex;align-items:center;gap:0;
-  padding:10px 0;flex-shrink:0
-}
-.logo-shield{
-  width:44px;height:50px;position:relative;flex-shrink:0
-}
-
-.header-brand{display:flex;flex-direction:column;justify-content:center}
-.header-title{
-  font-weight:800;font-size:16px;
-  color:#fff;letter-spacing:.2px;line-height:1.2
-}
-.header-sup{
-  font-size:10px;font-weight:600;
-  color:rgba(255,255,255,.6);
-  text-transform:uppercase;letter-spacing:1.5px;margin-top:3px
-}
-
-.header-right{display:flex;align-items:center;gap:12px}
-.fb-badge{
-  padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;
-  color:#fff;border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.1);white-space:nowrap;
-  letter-spacing:.3px
-}
-
-/* Faixa vermelha abaixo do header */
-.header-stripe{
-  height:4px;
-  background:linear-gradient(90deg, var(--red) 0%, #ef5350 50%, var(--red) 100%);
-}
-
-/* ── NAV ───────────────────────────────────────────────── */
-#nav{
-  background:var(--white);
-  border-bottom:1px solid var(--gray-200);
-  padding:0 28px;
-  display:flex;gap:0;overflow-x:auto;
-  box-shadow:0 1px 4px rgba(0,0,0,.06)
-}
-.nav-btn{
-  background:none;border:none;cursor:pointer;
-  padding:15px 22px;font-size:13px;font-weight:600;
-  color:var(--gray-500);border-bottom:3px solid transparent;
-  transition:all .18s;white-space:nowrap;font-family:inherit;
-  letter-spacing:.2px
-}
-.nav-btn:hover{color:var(--blue);background:var(--gray-50)}
-.nav-btn.active{color:var(--blue);border-bottom:3px solid var(--red);font-weight:700}
-
-/* ── MAIN ──────────────────────────────────────────────── */
-#main{padding:28px;max-width:1440px;margin:0 auto}
-
-/* ── SUMMARY CARDS ─────────────────────────────────────── */
-.card-row{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:14px;margin-bottom:28px
-}
-.summary-card{
-  background:var(--white);
-  border:1px solid var(--gray-200);
-  border-radius:10px;
-  padding:18px 16px;
-  display:flex;flex-direction:column;gap:7px;
-  box-shadow:0 1px 4px rgba(0,0,0,.06);
-  transition:box-shadow .18s
-}
-.summary-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1)}
-.card-icon{font-size:20px}
-.card-val{font-size:28px;font-weight:800;line-height:1;letter-spacing:-1px}
-.card-label{color:var(--gray-500);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
-
-/* ── SECTION ───────────────────────────────────────────── */
-.section{margin-bottom:32px}
-.section-title{
-  font-size:15px;font-weight:800;color:var(--blue);
-  margin-bottom:14px;letter-spacing:.2px;
-  display:flex;align-items:center;gap:10px
-}
-.section-title::before{
-  content:'';display:block;width:4px;height:18px;
-  background:var(--red);border-radius:2px;flex-shrink:0
-}
-
-/* ── PROGRESS BAR ──────────────────────────────────────── */
-.progress-wrap{
-  height:34px;border-radius:8px;overflow:hidden;
-  background:var(--gray-100);display:flex;border:1px solid var(--gray-200)
-}
-.progress-seg{
-  height:100%;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:12px;font-weight:700;
-  transition:width .7s cubic-bezier(.4,0,.2,1);min-width:0;overflow:hidden
-}
-.legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:7px;color:var(--gray-500);font-size:12px;font-weight:500}
-.legend-dot{width:12px;height:12px;border-radius:3px;display:inline-block;flex-shrink:0}
-
-/* ── TABLES ────────────────────────────────────────────── */
-.table-wrap{
-  overflow-x:auto;border-radius:10px;
-  border:1px solid var(--gray-200);
-  box-shadow:0 1px 4px rgba(0,0,0,.05)
-}
-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--white)}
-thead{position:sticky;top:0;z-index:2}
-th{
-  background:var(--blue);color:rgba(255,255,255,.9);font-weight:700;
-  padding:11px 14px;text-align:left;font-size:11px;
-  white-space:nowrap;letter-spacing:.5px;text-transform:uppercase
-}
-th:first-child{border-radius:9px 0 0 0}
-th:last-child{border-radius:0 9px 0 0}
-tr{border-bottom:1px solid var(--gray-100)}
-tr:last-child{border-bottom:none}
-tr:hover td{background:#f0f4ff}
-td{padding:10px 14px;color:var(--gray-700);vertical-align:middle}
-tbody tr:nth-child(even) td{background:var(--gray-50)}
-tbody tr:nth-child(even):hover td{background:#f0f4ff}
-
-/* ── MINI BAR ──────────────────────────────────────────── */
-.mini-bar-wrap{display:flex;align-items:center;gap:9px;min-width:110px}
-.mini-bar-bg{width:70px;height:7px;background:var(--gray-200);border-radius:4px;overflow:hidden;flex-shrink:0}
-.mini-bar-fill{height:100%;border-radius:4px;transition:width .6s}
-
-/* ── FAROL ─────────────────────────────────────────────── */
-.farol-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  border-radius:20px;padding:4px 12px;font-weight:700;font-size:12px;
-  border-width:1px;border-style:solid
-}
-.farol-dot{
-  width:32px;height:32px;border-radius:50%;
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:14px;border-width:2px;border-style:solid
-}
-
-/* ── FORM PANEL ────────────────────────────────────────── */
-.form-panel{
-  background:var(--white);
-  border:1px solid var(--gray-200);border-radius:12px;
-  padding:26px;margin-bottom:22px;
-  box-shadow:0 2px 12px rgba(10,47,108,.08)
-}
-.form-title{
-  color:var(--blue);margin-bottom:20px;
-  font-weight:800;font-size:15px;
-  display:flex;align-items:center;gap:8px
-}
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-  gap:16px
-}
-label.field{
-  display:flex;flex-direction:column;gap:6px;
-  color:var(--gray-500);font-size:11px;font-weight:700;
-  letter-spacing:.6px;text-transform:uppercase
-}
-input,select,textarea{
-  background:var(--white);
-  border:1.5px solid var(--gray-200);
-  border-radius:8px;padding:9px 12px;
-  color:var(--gray-900);font-size:13px;outline:none;
-  transition:border .18s,box-shadow .18s;
-  font-family:inherit;width:100%
-}
-input:focus,select:focus,textarea:focus{
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(10,47,108,.1)
-}
-textarea{resize:vertical}
-select{cursor:pointer}
-
-.equiv-box{
-  background:var(--blue-light);
-  border:1px solid #b3cce8;border-radius:8px;
-  padding:11px 16px;font-size:13px;margin-top:14px;
-  line-height:1.7;color:var(--blue)
-}
-
-/* ── BUTTONS ───────────────────────────────────────────── */
-.btn-primary{
-  background:var(--red);
-  border:none;border-radius:8px;padding:10px 22px;
-  color:#fff;font-weight:700;font-size:13px;cursor:pointer;
-  font-family:inherit;letter-spacing:.3px;
-  transition:background .18s,transform .1s,box-shadow .18s;
-  box-shadow:0 2px 8px rgba(211,47,47,.3)
-}
-.btn-primary:hover{background:var(--red-dark);box-shadow:0 4px 14px rgba(211,47,47,.4)}
-.btn-primary:active{transform:scale(.97)}
-.btn-secondary{
-  background:var(--white);border:1.5px solid var(--gray-300);border-radius:8px;
-  padding:10px 18px;color:var(--gray-700);font-weight:600;
-  font-size:13px;cursor:pointer;font-family:inherit;
-  transition:border-color .18s,background .18s
-}
-.btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
-.btn-edit{
-  background:var(--blue-light);border:1px solid #b3cce8;
-  border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;
-  transition:background .15s
-}
-.btn-edit:hover{background:#c5d9f0}
-.btn-delete{
-  background:#fff0f0;border:1px solid #ffcdd2;
-  border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;
-  transition:background .15s
-}
-.btn-delete:hover{background:#ffcdd2}
-
-/* ── FILTERS ───────────────────────────────────────────── */
-.filter-row{
-  display:flex;gap:10px;flex-wrap:wrap;
-  align-items:center;margin-bottom:16px;
-  background:var(--white);border:1px solid var(--gray-200);
-  border-radius:10px;padding:14px 16px;
-  box-shadow:0 1px 4px rgba(0,0,0,.04)
-}
-.filter-row input,.filter-row select{flex:1;min-width:160px;max-width:300px}
-.count-badge{
-  color:var(--gray-500);font-size:12px;font-weight:600;
-  white-space:nowrap;padding:4px 12px;background:var(--gray-100);border-radius:20px
-}
-
-/* ── IMPORT PANEL ──────────────────────────────────────── */
-.import-panel{
-  background:var(--blue-light);
-  border:1px solid #b3cce8;border-radius:12px;
-  padding:20px;margin-bottom:20px
-}
-.import-title{color:var(--blue);font-weight:800;font-size:14px;margin-bottom:10px}
-.import-hint{color:var(--gray-500);font-size:12px;margin-bottom:10px;line-height:1.7}
-code{
-  background:var(--blue);color:#fff;
-  padding:2px 8px;border-radius:4px;font-size:11px;
-  font-family:'Courier New',monospace
-}
-
-/* ── BADGES ────────────────────────────────────────────── */
-.nivel-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-
-/* ── EMPTY ─────────────────────────────────────────────── */
-.empty-state{
-  text-align:center;padding:80px 20px;
-  color:var(--gray-400);font-size:15px
-}
-.empty-state .big{font-size:56px;margin-bottom:16px}
-.empty-state strong{color:var(--blue)}
-
-/* ── TOP ROW ───────────────────────────────────────────── */
-.top-row{
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:12px;margin-bottom:22px
-}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap}
-
-/* ── LOADING BAR ───────────────────────────────────────── */
-#loading-bar{
-  position:fixed;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--red),#ef5350,var(--blue-mid),var(--red));
-  background-size:300% 100%;
-  z-index:999;display:none;
-  animation:loadmove 1.4s linear infinite
-}
-@keyframes loadmove{0%{background-position:0%}100%{background-position:300%}}
-
-/* ── DIVIDER CARD (Dashboard) ──────────────────────────── */
-.dash-section-header{
-  display:flex;align-items:center;gap:12px;
-  margin:28px 0 16px;padding-bottom:10px;
-  border-bottom:2px solid var(--gray-200)
-}
-.dash-section-header .pill{
-  background:var(--blue);color:#fff;
-  font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px
-}
-
-/* ── RESPONSIVE ────────────────────────────────────────── */
-@media(max-width:640px){
-  #header{padding:0 16px}
-  #nav{padding:0 12px}
-  #main{padding:16px}
-  .form-grid{grid-template-columns:1fr}
-  .card-row{grid-template-columns:repeat(2,1fr)}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Educacional URE-CAIEIRAS</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { background-color: #f4f7fc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .tab-content { background: white; padding: 25px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6; border-top: none; }
+        .nav-tabs .nav-link { font-weight: bold; color: #0a4b6e; }
+        .nav-tabs .nav-link.active { background-color: #0a4b6e; color: white; border-color: #0a4b6e; }
+        .dashboard-card { border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); transition: 0.2s; }
+        .farol-verde { background-color: #28a745; color: white; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
+        .farol-amarelo { background-color: #ffc107; color: #333; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
+        .farol-vermelho { background-color: #dc3545; color: white; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
+        table th { background-color: #e9ecef; }
+        .btn-crud { margin: 2px; }
+    </style>
 </head>
 <body>
-
-<div id="loading-bar"></div>
-
-<!-- ══ HEADER ══════════════════════════════════════════════ -->
-<div id="header">
-  <div class="header-left">
-    <div class="logo-wrap">
-      <!-- Escudo URE Caieiras: azul escuro + vermelho + branco -->
-      <svg class="logo-shield" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Escudo base -->
-        <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="#fff" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
-        <!-- Faixa vermelha diagonal -->
-        <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="#0a2f6c"/>
-        <!-- Faixa vermelha central -->
-        <rect x="2" y="20" width="40" height="10" fill="#d32f2f"/>
-        <!-- Letras URE -->
-        <text x="22" y="17" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" font-size="9" fill="white" letter-spacing="1">URE</text>
-        <!-- Letras CAIEIRAS -->
-        <text x="22" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="5.5" fill="white" letter-spacing=".5">CAIEIRAS</text>
-        <!-- Estrela SP embaixo -->
-        <text x="22" y="44" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="rgba(255,255,255,.7)">✦</text>
-        <!-- Borda escudo -->
-        <path d="M22 2 L42 10 L42 28 C42 39 22 48 22 48 C22 48 2 39 2 28 L2 10 Z" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
-      </svg>
+<div class="container my-4">
+    <h2 class="text-center mb-4" style="color: #0a4b6e;"><i class="fas fa-chalkboard-teacher"></i> Observatório Educacional URE-CAIEIRAS</h2>
+    
+    <!-- Abas -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">📊 Dashboard de Melhora</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta" type="button" role="tab">📝 Meta Análise (CRUD)</button>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <!-- DASHBOARD -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+            <div class="row mb-4">
+                <div class="col-md-3"><label>Escola</label><select id="filtroEscola" class="form-select"></select></div>
+                <div class="col-md-3"><label>Ano/Série</label><select id="filtroAno" class="form-select"></select></div>
+                <div class="col-md-3"><label>Turma</label><select id="filtroTurma" class="form-select"></select></div>
+                <div class="col-md-3"><label>Professor</label><input type="text" id="filtroProfessor" class="form-control" placeholder="Filtrar professor"></div>
+            </div>
+            <div id="dashboardResumo" class="alert alert-info">Selecione filtros para visualizar os faróis de evolução.</div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tabelaDashboard">
+                    <thead class="table-dark">
+                        <tr><th>Estudante</th><th>Escola</th><th>Ano/Turma</th><th>ADD LP</th><th>PP LP (%)</th><th>Equivalência LP</th><th>ADD MT</th><th>PP MT (%)</th><th>Equivalência MT</th><th>Farol LP</th><th>Farol MT</th><th>Perfil Turma</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- META ANÁLISE (CRUD) -->
+        <div class="tab-pane fade" id="meta" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalRegistro"><i class="fas fa-plus"></i> Novo Registro</button>
+                <button class="btn btn-primary" id="btnImportarCSV"><i class="fas fa-file-import"></i> Importar CSV</button>
+                <input type="file" id="csvFile" accept=".csv" style="display:none">
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped" id="tabelaMeta">
+                    <thead class="table-secondary"><tr><th>Nome</th><th>Escola</th><th>Ano</th><th>Turma</th><th>Professor</th><th>Status ADD LP</th><th>PP LP %</th><th>Status ADD MT</th><th>PP MT %</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div style="width:1px;height:36px;background:rgba(255,255,255,.15);margin:0 4px"></div>
-    <div class="header-brand">
-      <div class="header-title">Sistema de Observação de Melhora Educacional</div>
-      <div class="header-sup">Diretoria de Ensino · URE Caieiras · SEE-SP</div>
+</div>
+
+<!-- Modal CRUD -->
+<div class="modal fade" id="modalRegistro" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Registro de Estudante</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="formRegistro">
+                    <input type="hidden" id="idRegistro">
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><label>Nome do Estudante*</label><input type="text" id="nome" class="form-control" required></div>
+                        <div class="col-md-6 mb-2"><label>Escola*</label><select id="escola" class="form-select" required></select></div>
+                        <div class="col-md-3 mb-2"><label>Ano/Série*</label><select id="anoSerie" class="form-select" required><option>5°Ano</option><option>6°Ano</option><option>7°Ano</option><option>8°Ano</option><option>9°Ano</option><option>1ª Série</option><option>2ª Série</option><option>3ª Série</option></select></div>
+                        <div class="col-md-3 mb-2"><label>Turma*</label><select id="turma" class="form-select" required><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
+                        <div class="col-md-6 mb-2"><label>Professor</label><input type="text" id="professor" class="form-control"></div>
+                        <div class="col-md-3 mb-2"><label>ADD LP (status)</label><select id="addLP" class="form-select"><option>Abaixo do básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select></div>
+                        <div class="col-md-3 mb-2"><label>PP LP (%)</label><input type="number" id="ppLP" step="any" class="form-control"></div>
+                        <div class="col-md-3 mb-2"><label>ADD MT (status)</label><select id="addMT" class="form-select"><option>Abaixo do básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select></div>
+                        <div class="col-md-3 mb-2"><label>PP MT (%)</label><input type="number" id="ppMT" step="any" class="form-control"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" id="salvarRegistro" class="btn btn-primary">Salvar</button></div>
+        </div>
     </div>
-  </div>
-  <div class="header-right">
-    <div class="fb-badge" id="fb-badge">⏳ Iniciando</div>
-  </div>
-</div>
-<div class="header-stripe"></div>
-
-<!-- ══ NAV ════════════════════════════════════════════════ -->
-<div id="nav">
-  <button class="nav-btn active" onclick="showTab('dashboard')">
-    <i class="fas fa-chart-bar" style="margin-right:7px;opacity:.75"></i>Dashboard
-  </button>
-  <button class="nav-btn" onclick="showTab('meta')">
-    <i class="fas fa-table" style="margin-right:7px;opacity:.75"></i>Meta Análise
-  </button>
 </div>
 
-<!-- ══ MAIN ═══════════════════════════════════════════════ -->
-<div id="main">
-  <div id="tab-dashboard"></div>
-  <div id="tab-meta" style="display:none"></div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-// ═══════════════════════════════════════════════
-// FIREBASE CONFIG — substitua pelos dados do seu projeto
-// ═══════════════════════════════════════════════
-const FIREBASE_CONFIG = {
-  apiKey: "COLE_SUA_API_KEY_AQUI",
-  authDomain: "COLE_SEU_AUTH_DOMAIN_AQUI",
-  projectId: "COLE_SEU_PROJECT_ID_AQUI",
-  storageBucket: "COLE_SEU_STORAGE_BUCKET_AQUI",
-  messagingSenderId: "COLE_SEU_SENDER_ID_AQUI",
-  appId: "COLE_SEU_APP_ID_AQUI"
-};
-
-// ═══════════════════════════════════════════════
-// DADOS ESTÁTICOS
-// ═══════════════════════════════════════════════
-const SCHOOLS = [
-  "CARLOS AUGUSTO DE PADUA FLEURY PROF","PEDRO GALRAO DO NASCIMENTO","WALTHER WEISZFLOG",
-  "FRANCISCO GONCALVES VIEIRA PROF","JOSE ROBERTO MELCHIOR DR","WALTER RIBAS DE ANDRADE PROF EE",
-  "ALFRIED THEODOR WEISZFLOG","ELCIO JOSE PEREIRA COTRIM PROF","JOAQUIM MARQUES DA SILVA SOBRINHO TTE",
-  "ODARICO OLIVEIRA NASCIMENTO PROF","JOSE PARADA PROFESSOR","NAIR HANNICKEL ROMARO",
-  "NIDE ZAIM CARDOSO PROFA","LENITA CORREA CAMARGO PROFA","JARDIM SAO FRANCISCO",
-  "DOMINGOS CAMBIAGHI PROF","ARTHUR WEINGRILL","OTTO WEISZFLOG",
-  "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA","ULYSSES SANCHES RAMIRES PROF","ARMANDO SESTINI",
-  "PEDRO PAULO DE AGUIAR","ALBINO FIORE","OZILDE ALBUQUERQUE PASSARELLA DR",
-  "ELVIRA PARADA MANGA PROFA","ALADINO POLON","LYDIA SCALET WALKER PROFA",
-  "BENEDITO FAGUNDES MARQUES","BUENO DE AZEVEDO FILHO PROF","ALBERTO GRAF CAPITAO",
-  "MARIA ZEZA GOMES DE OLIVEIRA","JOSE CARLOS DA SILVA JUNIOR","BELEM DA SERRA",
-  "IRACI SARTORI VIEIRA DA SILVA PROFA","VINCENZO LOBASSI","APARECIDO ROBERTO TONELLOTTI PROFESSOR",
-  "BENEDITO APARECIDO TAVARES PROF","CHACARA CAMPONESA JARDIM VASSOURAS","JOSE DE BARROS MARTINS EDITOR",
-  "BAIRRO JUNDIAIZINHO","DR. NELSON MANZANARES","ADAIL JARBAS DUCLOS","OLINDO DARTORA DR",
-  "JARDIM SILVIA II","PAULO DUARTE","LUIZ ALEXANDRE DOS SANTOS VEREADOR","ZILTON BICUDO PROF",
-  "DR. MARIO TOLEDO DE MORAES","ISAURA VALENTINI HANSER PROFA","SUZANA DIAS",
-  "ANA MARIA GARRIDO ORLANDIN PROFA","JARDIM ALEGRIA II","ROGERIO LEVORIN PROF",
-  "IVONE DOS ANJOS DA SILVA CAMPOS PROFA","ISAURA DE MIRANDA BOTTO PROFA","PIETRO PETRI",
-  "PARQUE CENTO E VINTE II","JARDIM DAS ROSAS","RITUCO MITANI PROFA",
-  "CELESTINA VALENTE LENGENFELDER PROFA","AZEVEDO SOARES","PEDRO LELIS DE SOUZA PREFEITO",
-  "BAIRRO DO ITAIM","AFONSO MORENO","JOCIMARA VIEIRA DA SILVA PROFA",
-  "ISAIAS LUIZ MATIAZZO","KATIA MARIA TARIFA LEME TONELLI PROFA"
-];
-const ANOS  = ["5º Ano","6º Ano","7º Ano","8º Ano","9º Ano","1ª Série EM","2ª Série EM","3ª Série EM"];
-const TURMAS= ["A","B","C","D","E","F","G","H"];
-const NIVEIS= ["Abaixo do Básico","Básico","Adequado","Avançado"];
-
-// Aprendizagem equivalente ADD → score numérico (0–13)
-const EQUIV = {
-  "5º Ano":      {"Abaixo do Básico":3,   "Básico":4,  "Adequado":5,  "Avançado":6},
-  "6º Ano":      {"Abaixo do Básico":1.5, "Básico":5,  "Adequado":6,  "Avançado":7},
-  "7º Ano":      {"Abaixo do Básico":3,   "Básico":6,  "Adequado":7,  "Avançado":8},
-  "8º Ano":      {"Abaixo do Básico":4,   "Básico":7,  "Adequado":8,  "Avançado":9},
-  "9º Ano":      {"Abaixo do Básico":5,   "Básico":8,  "Adequado":9,  "Avançado":10},
-  "1ª Série EM": {"Abaixo do Básico":5.5, "Básico":9,  "Adequado":10, "Avançado":11},
-  "2ª Série EM": {"Abaixo do Básico":6,   "Básico":10, "Adequado":11, "Avançado":12},
-  "3ª Série EM": {"Abaixo do Básico":7,   "Básico":11, "Adequado":12, "Avançado":13},
-};
-
-const FAROL_COLOR = {verde:"#2e7d32", amarelo:"#e65100", vermelho:"#c62828"};
-const FAROL_BG    = {verde:"#e8f5e9", amarelo:"#fff3e0", vermelho:"#ffebee"};
-const FAROL_BORDER= {verde:"#a5d6a7", amarelo:"#ffcc80", vermelho:"#ef9a9a"};
-const FAROL_LABEL = {verde:"Melhora",  amarelo:"Estagnado", vermelho:"Piora"};
-const FAROL_ICON  = {verde:"▲",        amarelo:"■",          vermelho:"▼"};
-const NIVEL_COLOR = {
-  "Abaixo do Básico":{"c":"#c62828","bg":"#ffebee"},
-  "Básico":           {"c":"#e65100","bg":"#fff3e0"},
-  "Adequado":         {"c":"#1565c0","bg":"#e3f0ff"},
-  "Avançado":         {"c":"#2e7d32","bg":"#e8f5e9"}
-};
-
-function addScore(ano,nivel){ return (EQUIV[ano]&&EQUIV[ano][nivel])?EQUIV[ano][nivel]:0; }
-function ppScore(lp,mat){ return ((parseFloat(lp)||0)+(parseFloat(mat)||0))/2/100*13; }
-function getFarol(nivel,ano,lp,mat){
-  const d=ppScore(lp,mat)-addScore(ano,nivel);
-  return d>0.5?"verde":d<-0.5?"vermelho":"amarelo";
-}
-function equivLabel(ano,nivel){
-  const eq=EQUIV[ano]&&EQUIV[ano][nivel];
-  if(eq===undefined) return "—";
-  if(eq<1) return "Pré-alfabetização";
-  if(eq<=9) return eq+"º Ano EF";
-  return Math.round(eq-9)+"ª Série EM";
-}
-
-// ═══════════════════════════════════════════════
-// STORAGE
-// ═══════════════════════════════════════════════
-let db=null, useFirebase=false, records=[];
-const LS_KEY="ure_caieiras_v2";
-function lsLoad(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch{return[]}}
-function lsSave(r){localStorage.setItem(LS_KEY,JSON.stringify(r))}
-
-async function initStorage(){
-  try{
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db=firebase.firestore();
-    const snap=await db.collection("meta_analise").orderBy("escola").get();
-    records=snap.docs.map(d=>({id:d.id,...d.data()}));
-    useFirebase=true;
-    setBadge("🔥 Firebase","#d32f2f");
-  }catch(e){
-    records=lsLoad();
-    useFirebase=false;
-    setBadge("💾 Armazenamento Local","rgba(255,255,255,.15)");
-  }
-  renderAll();
-}
-function setBadge(txt,bg){
-  const b=document.getElementById("fb-badge");
-  b.textContent=txt; b.style.background=bg;
-}
-async function dbAdd(rec){
-  showLoading(true);
-  if(useFirebase){const ref=await db.collection("meta_analise").add(rec);records.push({id:ref.id,...rec});}
-  else{const nr={...rec,id:Date.now()+"_"+Math.random().toString(36).slice(2)};records.push(nr);lsSave(records);}
-  showLoading(false);
-}
-async function dbUpdate(id,rec){
-  showLoading(true);
-  if(useFirebase){await db.collection("meta_analise").doc(id).update(rec);}
-  const i=records.findIndex(r=>r.id===id);
-  if(i>=0)records[i]={id,...rec};
-  if(!useFirebase)lsSave(records);
-  showLoading(false);
-}
-async function dbDelete(id){
-  if(!confirm("Confirmar exclusão deste registro?"))return;
-  showLoading(true);
-  if(useFirebase){await db.collection("meta_analise").doc(id).delete();}
-  records=records.filter(r=>r.id!==id);
-  if(!useFirebase)lsSave(records);
-  showLoading(false);
-  renderAll();
-}
-function showLoading(v){document.getElementById("loading-bar").style.display=v?"block":"none";}
-
-// ═══════════════════════════════════════════════
-// TABS
-// ═══════════════════════════════════════════════
-let currentTab="dashboard";
-function showTab(t){
-  currentTab=t;
-  document.getElementById("tab-dashboard").style.display=t==="dashboard"?"block":"none";
-  document.getElementById("tab-meta").style.display=t==="meta"?"block":"none";
-  document.querySelectorAll(".nav-btn").forEach((b,i)=>b.classList.toggle("active",["dashboard","meta"][i]===t));
-  if(t==="dashboard")renderDashboard();else renderMeta();
-}
-function renderAll(){renderDashboard();renderMeta();}
-
-// ═══════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════
-function renderDashboard(){
-  const el=document.getElementById("tab-dashboard");
-  if(currentTab!=="dashboard"&&el.children.length>0)return;
-
-  const analyzed=records.map(r=>({...r,farol:getFarol(r.addNivel,r.anoSerie,r.lpPercent,r.matPercent)}));
-  const tot=analyzed.length;
-  const verde=analyzed.filter(r=>r.farol==="verde").length;
-  const amarelo=analyzed.filter(r=>r.farol==="amarelo").length;
-  const vermelho=analyzed.filter(r=>r.farol==="vermelho").length;
-  const pctMelhora=tot?Math.round(verde/tot*100):0;
-
-  if(tot===0){
-    el.innerHTML=`<div class="empty-state">
-      <div class="big">📊</div>
-      Nenhum dado disponível ainda.<br>
-      Acesse a aba <strong>Meta Análise</strong> para adicionar registros.
-    </div>`;return;
-  }
-
-  const byAno={};
-  analyzed.forEach(r=>{if(!byAno[r.anoSerie])byAno[r.anoSerie]={verde:0,amarelo:0,vermelho:0};byAno[r.anoSerie][r.farol]++;});
-  const byEsc={};
-  analyzed.forEach(r=>{if(!byEsc[r.escola])byEsc[r.escola]={verde:0,amarelo:0,vermelho:0};byEsc[r.escola][r.farol]++;});
-  const escSorted=Object.entries(byEsc).sort((a,b)=>{
-    const ta=a[1].verde+a[1].amarelo+a[1].vermelho,tb=b[1].verde+b[1].amarelo+b[1].vermelho;
-    return(b[1].verde/tb)-(a[1].verde/ta);
-  });
-
-  el.innerHTML=`
-  <!-- CARDS -->
-  <div class="card-row">
-    ${card("👥","Estudantes",tot,"#0a2f6c")}
-    ${card("▲","Melhora",verde,"#2e7d32")}
-    ${card("■","Estagnado",amarelo,"#e65100")}
-    ${card("▼","Piora",vermelho,"#c62828")}
-    ${card("📈","Taxa de Melhora",pctMelhora+"%","#0a2f6c")}
-  </div>
-
-  <!-- DISTRIBUIÇÃO GERAL -->
-  <div class="section">
-    <div class="section-title">Distribuição Geral por Farol</div>
-    <div class="progress-wrap">
-      ${pSeg(verde,tot,"#2e7d32","Melhora")}
-      ${pSeg(amarelo,tot,"#e65100","Estagnado")}
-      ${pSeg(vermelho,tot,"#c62828","Piora")}
-    </div>
-    <div class="legend">
-      <div class="legend-item"><span class="legend-dot" style="background:#2e7d32"></span>Melhora (${verde})</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#e65100"></span>Estagnado (${amarelo})</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#c62828"></span>Piora (${vermelho})</div>
-    </div>
-  </div>
-
-  <!-- POR ANO/SÉRIE -->
-  <div class="section">
-    <div class="section-title">Por Ano / Série</div>
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th>Ano / Série</th>
-        <th style="color:#a5d6a7">▲ Melhora</th>
-        <th style="color:#ffcc80">■ Estagnado</th>
-        <th style="color:#ef9a9a">▼ Piora</th>
-        <th>Total</th>
-        <th>% Melhora</th>
-      </tr></thead>
-      <tbody>
-        ${ANOS.filter(a=>byAno[a]).map(a=>{
-          const v=byAno[a],t2=v.verde+v.amarelo+v.vermelho;
-          const p=Math.round(v.verde/t2*100);
-          const bc=p>=60?"#2e7d32":p>=30?"#e65100":"#c62828";
-          return`<tr>
-            <td><strong style="color:#0a2f6c">${a}</strong></td>
-            <td style="color:#2e7d32;font-weight:700">${v.verde}</td>
-            <td style="color:#e65100;font-weight:700">${v.amarelo}</td>
-            <td style="color:#c62828;font-weight:700">${v.vermelho}</td>
-            <td>${t2}</td>
-            <td><div class="mini-bar-wrap">
-              <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${p}%;background:${bc}"></div></div>
-              <span style="color:${bc};font-weight:700;font-size:13px">${p}%</span>
-            </div></td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table></div>
-  </div>
-
-  <!-- POR ESCOLA -->
-  <div class="section">
-    <div class="section-title">Por Escola</div>
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th>Escola</th>
-        <th style="color:#a5d6a7">▲ Melhora</th>
-        <th style="color:#ffcc80">■ Estagnado</th>
-        <th style="color:#ef9a9a">▼ Piora</th>
-        <th>% Melhora</th>
-      </tr></thead>
-      <tbody>
-        ${escSorted.map(([esc,v])=>{
-          const t2=v.verde+v.amarelo+v.vermelho;
-          const p=Math.round(v.verde/t2*100);
-          const bc=p>=60?"#2e7d32":p>=30?"#e65100":"#c62828";
-          return`<tr>
-            <td style="max-width:260px;word-break:break-word;font-size:12px">${esc}</td>
-            <td style="color:#2e7d32;font-weight:700">${v.verde}</td>
-            <td style="color:#e65100;font-weight:700">${v.amarelo}</td>
-            <td style="color:#c62828;font-weight:700">${v.vermelho}</td>
-            <td><div class="mini-bar-wrap">
-              <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${p}%;background:${bc}"></div></div>
-              <span style="color:${bc};font-weight:700;font-size:13px">${p}%</span>
-            </div></td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table></div>
-  </div>
-
-  <!-- LISTA DE ESTUDANTES -->
-  <div class="section">
-    <div class="section-title">Lista Completa de Estudantes</div>
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th>Farol</th><th>Escola</th><th>Ano/Série</th><th>Turma</th><th>Professor</th>
-        <th>Nível ADD</th><th>LP %</th><th>Mat %</th>
-        <th>Equiv. ADD</th><th>Score ADD</th><th>Score PP</th><th>Perfil</th><th>Obs</th>
-      </tr></thead>
-      <tbody>
-        ${analyzed.map(r=>{
-          const f=r.farol;
-          const sa=addScore(r.anoSerie,r.addNivel).toFixed(1);
-          const sp=ppScore(r.lpPercent,r.matPercent).toFixed(1);
-          const nc=NIVEL_COLOR[r.addNivel]||{c:"#6b7280",bg:"#f3f4f6"};
-          const pc=r.perfilAbaixoBasico==="Sim"?{c:"#c62828",bg:"#ffebee"}:{c:"#2e7d32",bg:"#e8f5e9"};
-          return`<tr>
-            <td><span class="farol-badge" style="color:${FAROL_COLOR[f]};background:${FAROL_BG[f]};border-color:${FAROL_BORDER[f]}">
-              ${FAROL_ICON[f]} ${FAROL_LABEL[f]}
-            </span></td>
-            <td style="max-width:180px;font-size:11px;word-break:break-word">${r.escola||"—"}</td>
-            <td style="font-weight:600">${r.anoSerie||"—"}</td>
-            <td>${r.turma||"—"}</td>
-            <td style="font-size:12px">${r.professor||"—"}</td>
-            <td><span class="nivel-badge" style="color:${(nc.c||nc)};background:${(nc.bg||"#f3f4f6")}">${r.addNivel||"—"}</span></td>
-            <td>${r.lpPercent?r.lpPercent+"%":"—"}</td>
-            <td>${r.matPercent?r.matPercent+"%":"—"}</td>
-            <td style="font-size:11px;color:#6b7280">${equivLabel(r.anoSerie,r.addNivel)}</td>
-            <td style="font-weight:600;color:#0a2f6c">${sa}</td>
-            <td style="font-weight:600;color:#0a2f6c">${sp}</td>
-            <td><span style="font-size:11px;font-weight:700;color:${pc.c};background:${pc.bg};padding:3px 10px;border-radius:20px">${r.perfilAbaixoBasico||"—"}</span></td>
-            <td style="max-width:160px;font-size:11px;color:#9aa0ac">${r.obs||"—"}</td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table></div>
-  </div>`;
-}
-
-function card(icon,label,val,color){
-  return`<div class="summary-card" style="border-top:3px solid ${color}">
-    <div class="card-icon" style="color:${color}">${icon}</div>
-    <div class="card-val" style="color:${color}">${val}</div>
-    <div class="card-label">${label}</div>
-  </div>`;
-}
-function pSeg(n,tot,color,lbl){
-  if(!n)return"";
-  const pct=Math.round(n/tot*100);
-  return`<div class="progress-seg" style="width:${pct}%;background:${color}" title="${lbl}: ${n}">${pct}%</div>`;
-}
-
-// ═══════════════════════════════════════════════
-// META ANÁLISE
-// ═══════════════════════════════════════════════
-let editId=null,showForm=false,showImport=false,searchVal="",filterAno="",filterEsc="";
-
-function renderMeta(){
-  const el=document.getElementById("tab-meta");
-  const filtered=records.filter(r=>{
-    const s=searchVal.toLowerCase();
-    const ms=!s||[r.escola,r.professor,r.turma].some(v=>(v||"").toLowerCase().includes(s));
-    return ms&&(!filterAno||r.anoSerie===filterAno)&&(!filterEsc||r.escola===filterEsc);
-  });
-
-  el.innerHTML=`
-  <div class="top-row">
-    <div class="section-title" style="margin:0">Meta Análise — Registros</div>
-    <div class="btn-row">
-      <button class="btn-secondary" onclick="toggleImport()">
-        <i class="fas fa-file-import" style="margin-right:6px"></i>Importar Lista
-      </button>
-      <button class="btn-primary" onclick="toggleForm()">
-        ${showForm&&!editId?'<i class="fas fa-times" style="margin-right:6px"></i>Fechar':'<i class="fas fa-plus" style="margin-right:6px"></i>Novo Registro'}
-      </button>
-    </div>
-  </div>
-
-  ${showImport?renderImportPanel():""}
-  ${showForm?renderForm():""}
-
-  <div class="filter-row">
-    <input type="text" placeholder="🔍 Buscar escola, professor, turma..." value="${searchVal}" oninput="searchVal=this.value;renderMeta()"/>
-    <select onchange="filterAno=this.value;renderMeta()">
-      <option value="">Todos os anos</option>
-      ${ANOS.map(a=>`<option value="${a}"${filterAno===a?" selected":""}>${a}</option>`).join("")}
-    </select>
-    <select onchange="filterEsc=this.value;renderMeta()" style="max-width:260px">
-      <option value="">Todas as escolas</option>
-      ${SCHOOLS.map(s=>`<option value="${s}"${filterEsc===s?" selected":""}>${s.length>35?s.slice(0,35)+"…":s}</option>`).join("")}
-    </select>
-    <span class="count-badge">${filtered.length} registro(s)</span>
-  </div>
-
-  <div class="table-wrap"><table>
-    <thead><tr>
-      <th>Farol</th><th>Escola</th><th>Ano/Série</th><th>Turma</th><th>Professor</th>
-      <th>Nível ADD</th><th>LP %</th><th>Mat %</th><th>Perfil</th><th>Obs</th><th>Ações</th>
-    </tr></thead>
-    <tbody>
-      ${filtered.length===0?`<tr><td colspan="11" style="text-align:center;color:#9aa0ac;padding:36px;font-size:14px">
-        <i class="fas fa-inbox" style="font-size:24px;margin-bottom:8px;display:block;opacity:.4"></i>
-        Nenhum registro encontrado
-      </td></tr>`:""}
-      ${filtered.map(r=>{
-        const f=getFarol(r.addNivel,r.anoSerie,r.lpPercent,r.matPercent);
-        const nc=NIVEL_COLOR[r.addNivel]||{c:"#6b7280",bg:"#f3f4f6"};
-        const pc=r.perfilAbaixoBasico==="Sim"?{c:"#c62828",bg:"#ffebee"}:{c:"#2e7d32",bg:"#e8f5e9"};
-        return`<tr>
-          <td><div class="farol-dot" style="color:${FAROL_COLOR[f]};border-color:${FAROL_BORDER[f]};background:${FAROL_BG[f]}" title="${FAROL_LABEL[f]}">${FAROL_ICON[f]}</div></td>
-          <td style="max-width:190px;font-size:11px;word-break:break-word">${r.escola||"—"}</td>
-          <td style="font-weight:600;color:#0a2f6c">${r.anoSerie||"—"}</td>
-          <td>${r.turma||"—"}</td>
-          <td style="font-size:12px">${r.professor||"—"}</td>
-          <td><span class="nivel-badge" style="color:${nc.c||nc};background:${nc.bg||"#f3f4f6"}">${r.addNivel||"—"}</span></td>
-          <td>${r.lpPercent?r.lpPercent+"%":"—"}</td>
-          <td>${r.matPercent?r.matPercent+"%":"—"}</td>
-          <td><span style="font-size:11px;font-weight:700;color:${pc.c};background:${pc.bg};padding:3px 10px;border-radius:20px">${r.perfilAbaixoBasico||"—"}</span></td>
-          <td style="max-width:150px;font-size:11px;color:#9aa0ac">${r.obs||"—"}</td>
-          <td><div style="display:flex;gap:5px">
-            <button class="btn-edit" onclick="startEdit('${r.id}')" title="Editar"><i class="fas fa-pencil"></i></button>
-            <button class="btn-delete" onclick="dbDelete('${r.id}').then(()=>renderAll())" title="Excluir"><i class="fas fa-trash"></i></button>
-          </div></td>
-        </tr>`;
-      }).join("")}
-    </tbody>
-  </table></div>`;
-}
-
-function renderForm(){
-  const r=editId?(records.find(x=>x.id===editId)||{}):{};
-  const escola=r.escola||"",anoSerie=r.anoSerie||"",turma=r.turma||"";
-  const prof=r.professor||"",nivel=r.addNivel||"",lp=r.lpPercent||"",mat=r.matPercent||"";
-  const perfil=r.perfilAbaixoBasico||"Não";
-  const eqLabel=nivel&&anoSerie?equivLabel(anoSerie,nivel):"—";
-  let farolPreview="";
-  if(nivel&&anoSerie&&lp&&mat){
-    const f=getFarol(nivel,anoSerie,lp,mat);
-    farolPreview=` &nbsp;·&nbsp; Farol: <strong style="color:${FAROL_COLOR[f]}">${FAROL_ICON[f]} ${FAROL_LABEL[f]}</strong>`;
-  }
-  return`
-  <div class="form-panel">
-    <div class="form-title">
-      <span style="width:28px;height:28px;background:${editId?"#e3f0ff":"#ffebee"};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px">
-        ${editId?"✏️":"＋"}
-      </span>
-      ${editId?"Editar Registro":"Novo Registro"}
-    </div>
-    <div class="form-grid">
-      <label class="field">Escola *
-        <select id="f-escola" onchange="livePreview()">
-          <option value="">— Selecionar —</option>
-          ${SCHOOLS.map(s=>`<option value="${s}"${s===escola?" selected":""}>${s}</option>`).join("")}
-        </select>
-      </label>
-      <label class="field">Ano / Série *
-        <select id="f-ano" onchange="livePreview()">
-          <option value="">— Selecionar —</option>
-          ${ANOS.map(a=>`<option value="${a}"${a===anoSerie?" selected":""}>${a}</option>`).join("")}
-        </select>
-      </label>
-      <label class="field">Turma *
-        <select id="f-turma">
-          <option value="">— Selecionar —</option>
-          ${TURMAS.map(t=>`<option value="${t}"${t===turma?" selected":""}>${t}</option>`).join("")}
-        </select>
-      </label>
-      <label class="field">Nome do Professor
-        <input id="f-prof" type="text" value="${prof}" placeholder="Nome do professor"/>
-      </label>
-      <label class="field">Nível — Avaliação Diagnóstica Digital (ADD)
-        <select id="f-nivel" onchange="livePreview()">
-          <option value="">— Selecionar —</option>
-          ${NIVEIS.map(n=>`<option value="${n}"${n===nivel?" selected":""}>${n}</option>`).join("")}
-        </select>
-      </label>
-      <label class="field">Prova Paulista — Língua Portuguesa (%)
-        <input id="f-lp" type="number" min="0" max="100" value="${lp}" placeholder="Ex: 65" oninput="livePreview()"/>
-      </label>
-      <label class="field">Prova Paulista — Matemática (%)
-        <input id="f-mat" type="number" min="0" max="100" value="${mat}" placeholder="Ex: 58" oninput="livePreview()"/>
-      </label>
-      <label class="field">Perfil Inicial: &gt;50% Abaixo do Básico (ADD)?
-        <select id="f-perfil">
-          <option value="Sim"${perfil==="Sim"?" selected":""}>Sim</option>
-          <option value="Não"${perfil==="Não"?" selected":""}>Não</option>
-        </select>
-      </label>
-    </div>
-    <div class="equiv-box" id="equiv-box">
-      <i class="fas fa-link" style="margin-right:6px;opacity:.6"></i>
-      <strong>Aprendizagem equivalente:</strong>
-      <span id="equiv-label" style="color:#0a2f6c;font-weight:700">&nbsp;${eqLabel}</span>
-      <span id="farol-preview">${farolPreview}</span>
-    </div>
-    <label class="field" style="margin-top:18px">Observações
-      <textarea id="f-obs" rows="3" placeholder="Campo livre para observações sobre esta turma...">${r.obs||""}</textarea>
-    </label>
-    <div style="display:flex;gap:10px;margin-top:22px">
-      <button class="btn-primary" onclick="submitForm()">
-        <i class="fas fa-${editId?"save":"check"}" style="margin-right:7px"></i>${editId?"Salvar Alterações":"Adicionar Registro"}
-      </button>
-      <button class="btn-secondary" onclick="cancelForm()">Cancelar</button>
-    </div>
-  </div>`;
-}
-
-function renderImportPanel(){
-  return`
-  <div class="import-panel">
-    <div class="import-title"><i class="fas fa-file-import" style="margin-right:8px"></i>Importar via Lista — separador: ponto e vírgula ( ; )</div>
-    <div class="import-hint">
-      Formato por linha:<br>
-      <code>escola ; anoSerie ; turma ; professor ; addNivel ; lpPercent ; matPercent ; perfilAbaixoBasico ; obs</code><br><br>
-      Exemplo: <code>WALTHER WEISZFLOG ; 6º Ano ; A ; João Silva ; Abaixo do Básico ; 42 ; 38 ; Sim ; Turma com alto índice de evasão</code>
-    </div>
-    <textarea id="import-text" rows="7" placeholder="Cole aqui as linhas da lista..."></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-primary" onclick="doImport()">
-        <i class="fas fa-upload" style="margin-right:6px"></i>Importar
-      </button>
-      <button class="btn-secondary" onclick="toggleImport()">Cancelar</button>
-    </div>
-  </div>`;
-}
-
-function livePreview(){
-  const ano=document.getElementById("f-ano")?.value||"";
-  const nivel=document.getElementById("f-nivel")?.value||"";
-  const lp=document.getElementById("f-lp")?.value||"";
-  const mat=document.getElementById("f-mat")?.value||"";
-  const el=document.getElementById("equiv-label");
-  const fp=document.getElementById("farol-preview");
-  if(el)el.textContent=" "+(nivel&&ano?equivLabel(ano,nivel):"—");
-  if(fp){
-    if(nivel&&ano&&lp&&mat){
-      const f=getFarol(nivel,ano,lp,mat);
-      fp.innerHTML=` &nbsp;·&nbsp; Farol: <strong style="color:${FAROL_COLOR[f]}">${FAROL_ICON[f]} ${FAROL_LABEL[f]}</strong>`;
-    }else fp.innerHTML="";
-  }
-}
-
-async function submitForm(){
-  const rec={
-    escola:document.getElementById("f-escola").value,
-    anoSerie:document.getElementById("f-ano").value,
-    turma:document.getElementById("f-turma").value,
-    professor:document.getElementById("f-prof").value.trim(),
-    addNivel:document.getElementById("f-nivel").value,
-    lpPercent:document.getElementById("f-lp").value,
-    matPercent:document.getElementById("f-mat").value,
-    perfilAbaixoBasico:document.getElementById("f-perfil").value,
-    obs:document.getElementById("f-obs").value.trim(),
-  };
-  if(!rec.escola||!rec.anoSerie||!rec.turma){alert("Preencha os campos obrigatórios: Escola, Ano/Série e Turma.");return;}
-  if(editId){await dbUpdate(editId,rec);}else{await dbAdd(rec);}
-  cancelForm();renderAll();
-}
-
-function startEdit(id){editId=id;showForm=true;renderMeta();document.getElementById("tab-meta").scrollIntoView({behavior:"smooth"});}
-function cancelForm(){editId=null;showForm=false;renderMeta();}
-function toggleForm(){showForm=!showForm;editId=null;renderMeta();}
-function toggleImport(){showImport=!showImport;renderMeta();}
-
-async function doImport(){
-  const text=document.getElementById("import-text")?.value||"";
-  const lines=text.trim().split("\n").filter(l=>l.trim());
-  for(const line of lines){
-    const parts=line.split(";").map(p=>p.trim());
-    const[escola,anoSerie,turma,professor,addNivel,lpPercent,matPercent,perfilAbaixoBasico,...obsArr]=parts;
-    if(escola&&anoSerie&&turma){
-      await dbAdd({escola,anoSerie,turma,professor:professor||"",addNivel:addNivel||"",
-        lpPercent:lpPercent||"",matPercent:matPercent||"",
-        perfilAbaixoBasico:perfilAbaixoBasico||"Não",obs:obsArr.join(";")});
+    // ================= CONFIGURAÇÃO DO FIREBASE =================
+    // Substitua pelos dados do seu projeto Firebase (crie um projeto novo no console.firebase.google.com)
+    const firebaseConfig = {
+        apiKey: "SUA_API_KEY",
+        authDomain: "SEU_PROJETO.firebaseapp.com",
+        projectId: "SEU_PROJETO",
+        storageBucket: "SEU_PROJETO.appspot.com",
+        messagingSenderId: "NUMERO",
+        appId: "SEU_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // Lista de escolas (conforme fornecida)
+    const escolasLista = [
+        "CARLOS AUGUSTO DE PADUA FLEURY PROF", "PEDRO GALRAO DO NASCIMENTO", "WALTHER WEISZFLOG", "FRANCISCO GONCALVES VIEIRA PROF", "JOSE ROBERTO MELCHIOR DR",
+        "WALTER RIBAS DE ANDRADE PROF EE", "ALFRIED THEODOR WEISZFLOG", "ELCIO JOSE PEREIRA COTRIM PROF", "JOAQUIM MARQUES DA SILVA SOBRINHO TTE", "ODARICO OLIVEIRA NASCIMENTO PROF",
+        "JOSE PARADA PROFESSOR", "NAIR HANNICKEL ROMARO", "NIDE ZAIM CARDOSO PROFA", "LENITA CORREA CAMARGO PROFA", "JARDIM SAO FRANCISCO",
+        "DOMINGOS CAMBIAGHI PROF", "ARTHUR WEINGRILL", "OTTO WEISZFLOG", "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA", "ULYSSES SANCHES RAMIRES PROF",
+        "ARMANDO SESTINI", "PEDRO PAULO DE AGUIAR", "ALBINO FIORE", "OZILDE ALBUQUERQUE PASSARELLA DR", "ELVIRA PARADA MANGA PROFA",
+        "ALADINO POLON", "LYDIA SCALET WALKER PROFA", "BENEDITO FAGUNDES MARQUES", "BUENO DE AZEVEDO FILHO PROF", "ALBERTO GRAF CAPITAO",
+        "MARIA ZEZA GOMES DE OLIVEIRA", "JOSE CARLOS DA SILVA JUNIOR", "BELEM DA SERRA", "IRACI SARTORI VIEIRA DA SILVA PROFA", "VINCENZO LOBASSI",
+        "APARECIDO ROBERTO TONELLOTTI PROFESSOR", "BENEDITO APARECIDO TAVARES PROF", "CHACARA CAMPONESA JARDIM VASSOURAS", "JOSE DE BARROS MARTINS EDITOR", "BAIRRO JUNDIAIZINHO",
+        "DR. NELSON MANZANARES", "ADAIL JARBAS DUCLOS", "OLINDO DARTORA DR", "JARDIM SILVIA II", "PAULO DUARTE",
+        "LUIZ ALEXANDRE DOS SANTOS VEREADOR", "ZILTON BICUDO PROF", "DR. MARIO TOLEDO DE MORAES", "ISAURA VALENTINI HANSER PROFA", "SUZANA DIAS",
+        "ANA MARIA GARRIDO ORLANDIN PROFA", "JARDIM ALEGRIA II", "ROGERIO LEVORIN PROF", "IVONE DOS ANJOS DA SILVA CAMPOS e PROFA", "ISAURA DE MIRANDA BOTTO PROFA",
+        "PIETRO PETRI", "PARQUE CENTO E VINTE II", "JARDIM DAS ROSAS", "RITUCO MITANI PROFA", "CELESTINA VALENTE LENGENFELDER PROFA",
+        "AZEVEDO SOARES", "PEDRO LELIS DE SOUZA PREFEITO", "BAIRRO DO ITAIM", "AFONSO MORENO", "JOCIMARA VIEIRA DA SILVA PROFA",
+        "ISAIAS LUIZ MATIAZZO", "KATIA MARIA TARIFA LEME TONELLI PROFA"
+    ];
+    
+    // Função auxiliar: equivalência de aprendizagem para ADD (se sexto ano e abaixo do básico)
+    function calcularEquivalencia(anoSerie, statusADD) {
+        if (anoSerie === "6°Ano" && statusADD === "Abaixo do básico") return "1°/2° ano";
+        if (anoSerie === "1ª Série" && statusADD === "Abaixo do básico") return "5° ano (equivalente abaixo do 6°)";
+        return statusADD; // ou manter o status original para outros casos
     }
-  }
-  showImport=false;renderAll();
-}
-
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-initStorage();
+    
+    // Converter % PP em status qualitativo (escala padrão)
+    function percentualParaStatus(pct) {
+        if (pct === undefined || pct === "") return "Sem dado";
+        if (pct < 35) return "Abaixo do básico";
+        if (pct < 60) return "Básico";
+        if (pct < 80) return "Adequado";
+        return "Avançado";
+    }
+    
+    // Determinar farol baseado na comparação entre status ADD e status da PP (convertido)
+    function calcularFarol(statusADD, percentualPP) {
+        if (percentualPP === undefined || percentualPP === "") return "Sem dado";
+        const statusPP = percentualParaStatus(percentualPP);
+        const ordem = {"Abaixo do básico":1, "Básico":2, "Adequado":3, "Avançado":4};
+        const valADD = ordem[statusADD] || 0;
+        const valPP = ordem[statusPP] || 0;
+        if (valPP > valADD) return "verde";
+        if (valPP === valADD) return "amarelo";
+        return "vermelho";
+    }
+    
+    // Calcular perfil inicial da turma (>50% abaixo do básico na ADD)
+    async function atualizarPerfilTurma(escola, ano, turma) {
+        const snapshot = await db.collection("metaAnalise").where("escola", "==", escola).where("anoSerie", "==", ano).where("turma", "==", turma).get();
+        let total = 0, abaixoLP = 0, abaixoMT = 0;
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            total++;
+            if (data.addLP === "Abaixo do básico") abaixoLP++;
+            if (data.addMT === "Abaixo do básico") abaixoMT++;
+        });
+        const percLP = total ? (abaixoLP/total)*100 : 0;
+        const percMT = total ? (abaixoMT/total)*100 : 0;
+        const statusLP = percLP > 50 ? "Sim (LP)" : "Não";
+        const statusMT = percMT > 50 ? "Sim (MT)" : "Não";
+        return { LP: statusLP, MT: statusMT };
+    }
+    
+    // CARREGAR DASHBOARD com filtros
+    async function carregarDashboard() {
+        const escola = document.getElementById("filtroEscola").value;
+        const ano = document.getElementById("filtroAno").value;
+        const turma = document.getElementById("filtroTurma").value;
+        const professor = document.getElementById("filtroProfessor").value.toLowerCase();
+        let query = db.collection("metaAnalise");
+        if (escola) query = query.where("escola", "==", escola);
+        if (ano) query = query.where("anoSerie", "==", ano);
+        if (turma) query = query.where("turma", "==", turma);
+        const snapshot = await query.get();
+        const tbody = document.querySelector("#tabelaDashboard tbody");
+        tbody.innerHTML = "";
+        let registros = [];
+        snapshot.forEach(doc => registros.push({id:doc.id, ...doc.data()}));
+        if(professor) registros = registros.filter(r => r.professor && r.professor.toLowerCase().includes(professor));
+        
+        for(const reg of registros){
+            const eqLP = calcularEquivalencia(reg.anoSerie, reg.addLP);
+            const eqMT = calcularEquivalencia(reg.anoSerie, reg.addMT);
+            const farolLP = calcularFarol(reg.addLP, reg.ppLP);
+            const farolMT = calcularFarol(reg.addMT, reg.ppMT);
+            const perfil = await atualizarPerfilTurma(reg.escola, reg.anoSerie, reg.turma);
+            const row = `<tr>
+                <td>${reg.nome}</td><td>${reg.escola}</td><td>${reg.anoSerie} - ${reg.turma}</td>
+                <td>${reg.addLP}</td><td>${reg.ppLP??'-'}</td><td>${eqLP}</td>
+                <td>${reg.addMT}</td><td>${reg.ppMT??'-'}</td><td>${eqMT}</td>
+                <td><span class="farol-${farolLP}">● ${farolLP.toUpperCase()}</span></td>
+                <td><span class="farol-${farolMT}">● ${farolMT.toUpperCase()}</span></td>
+                <td>LP:${perfil.LP} / MT:${perfil.MT}</td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        }
+        document.getElementById("dashboardResumo").innerHTML = `Total de estudantes: ${registros.length}`;
+    }
+    
+    // CRUD: listar na aba Meta
+    async function listarMetaAnalise() {
+        const snapshot = await db.collection("metaAnalise").orderBy("nome").get();
+        const tbody = document.querySelector("#tabelaMeta tbody");
+        tbody.innerHTML = "";
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const row = `<tr>
+                <td>${d.nome}</td><td>${d.escola}</td><td>${d.anoSerie}</td><td>${d.turma}</td><td>${d.professor || ''}</td>
+                <td>${d.addLP}</td><td>${d.ppLP??''}</td><td>${d.addMT}</td><td>${d.ppMT??''}</td>
+                <td><button class="btn btn-sm btn-warning btn-crud" onclick="editarRegistro('${doc.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger btn-crud" onclick="excluirRegistro('${doc.id}')"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+    
+    // Salvar (create/update)
+    document.getElementById("salvarRegistro").onclick = async () => {
+        const id = document.getElementById("idRegistro").value;
+        const dados = {
+            nome: document.getElementById("nome").value,
+            escola: document.getElementById("escola").value,
+            anoSerie: document.getElementById("anoSerie").value,
+            turma: document.getElementById("turma").value,
+            professor: document.getElementById("professor").value,
+            addLP: document.getElementById("addLP").value,
+            ppLP: parseFloat(document.getElementById("ppLP").value) || null,
+            addMT: document.getElementById("addMT").value,
+            ppMT: parseFloat(document.getElementById("ppMT").value) || null
+        };
+        if (!dados.nome) return alert("Nome obrigatório");
+        if (id) await db.collection("metaAnalise").doc(id).update(dados);
+        else await db.collection("metaAnalise").add(dados);
+        bootstrap.Modal.getInstance(document.getElementById("modalRegistro")).hide();
+        listarMetaAnalise();
+        carregarDashboard();
+    };
+    
+    window.editarRegistro = async (id) => {
+        const doc = await db.collection("metaAnalise").doc(id).get();
+        const d = doc.data();
+        document.getElementById("idRegistro").value = id;
+        document.getElementById("nome").value = d.nome;
+        document.getElementById("escola").value = d.escola;
+        document.getElementById("anoSerie").value = d.anoSerie;
+        document.getElementById("turma").value = d.turma;
+        document.getElementById("professor").value = d.professor || "";
+        document.getElementById("addLP").value = d.addLP;
+        document.getElementById("ppLP").value = d.ppLP || "";
+        document.getElementById("addMT").value = d.addMT;
+        document.getElementById("ppMT").value = d.ppMT || "";
+        new bootstrap.Modal(document.getElementById("modalRegistro")).show();
+    };
+    
+    window.excluirRegistro = async (id) => {
+        if(confirm("Excluir permanentemente?")) {
+            await db.collection("metaAnalise").doc(id).delete();
+            listarMetaAnalise();
+            carregarDashboard();
+        }
+    };
+    
+    // Importar CSV
+    document.getElementById("btnImportarCSV").onclick = () => document.getElementById("csvFile").click();
+    document.getElementById("csvFile").onchange = async (e) => {
+        const file = e.target.files[0];
+        const text = await file.text();
+        const linhas = text.split("\n").slice(1); // pula cabeçalho
+        for(let linha of linhas) {
+            const cols = linha.split(",");
+            if(cols.length < 9) continue;
+            const dados = {
+                nome: cols[0]?.trim(),
+                escola: cols[1]?.trim(),
+                anoSerie: cols[2]?.trim(),
+                turma: cols[3]?.trim(),
+                professor: cols[4]?.trim(),
+                addLP: cols[5]?.trim(),
+                ppLP: parseFloat(cols[6]) || null,
+                addMT: cols[7]?.trim(),
+                ppMT: parseFloat(cols[8]) || null
+            };
+            if(dados.nome && escolasLista.includes(dados.escola)) await db.collection("metaAnalise").add(dados);
+        }
+        alert("Importação concluída!");
+        listarMetaAnalise();
+        carregarDashboard();
+    };
+    
+    // Preencher selects e eventos
+    function preencherSelects() {
+        const escolaSelects = [document.getElementById("escola"), document.getElementById("filtroEscola")];
+        escolaSelects.forEach(sel => { sel.innerHTML = `<option value="">Todas</option>`+escolasLista.map(e=>`<option>${e}</option>`).join(""); });
+        const anos = ["5°Ano","6°Ano","7°Ano","8°Ano","9°Ano","1ª Série","2ª Série","3ª Série"];
+        const filtroAno = document.getElementById("filtroAno");
+        filtroAno.innerHTML = `<option value="">Todos</option>`+anos.map(a=>`<option>${a}</option>`).join("");
+        const turmaSelect = document.getElementById("filtroTurma");
+        turmaSelect.innerHTML = `<option value="">Todas</option>`+["A","B","C","D","E","F","G","H"].map(t=>`<option>${t}</option>`).join("");
+    }
+    
+    // Listeners de filtro
+    document.getElementById("filtroEscola").addEventListener("change", carregarDashboard);
+    document.getElementById("filtroAno").addEventListener("change", carregarDashboard);
+    document.getElementById("filtroTurma").addEventListener("change", carregarDashboard);
+    document.getElementById("filtroProfessor").addEventListener("input", carregarDashboard);
+    
+    // Inicialização
+    preencherSelects();
+    listarMetaAnalise();
+    carregarDashboard();
 </script>
 </body>
 </html>
