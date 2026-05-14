@@ -82,7 +82,7 @@
 
   <div class="tabs-nav">
     <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
-    <button class="tab-btn" data-tab="meta"><i class="fas fa-edit"></i> Meta-Análise (CRUD)</button>
+    <button class="tab-btn" data-tab="meta"><i class="fas fa-edit"></i> Meta-Análise</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -110,7 +110,7 @@
       <div class="kpi"><h3><i class="fas fa-chart-simple"></i> Farol Evolução</h3><p id="kpiFarol">-</p></div>
       <div class="kpi"><h3><i class="fas fa-school"></i> Perfil Turma</h3><p id="kpiPerfil">-</p></div>
     </div>
-<br>
+
     <div class="grid-3">
       <div class="card"><h3><i class="fas fa-chart-pie"></i> Distribuição Status ADD (LP)</h3><canvas id="chartStatusLP"></canvas></div>
       <div class="card"><h3><i class="fas fa-chart-pie"></i> Distribuição Status ADD (MT)</h3><canvas id="chartStatusMT"></canvas></div>
@@ -188,7 +188,7 @@
         <small>Formato: escola,ano,turma,professor,nome,eqLP,statusLP,eqMT,statusMT,ppLP,ppMT,obs</small><br>
         <small>statusLP/statusMT devem ser exatamente: "Abaixo do Básico", "Básico" ou "Proficiente"</small>
         </label>
-        <textarea id="bulkData" rows="6" placeholder="E.E. JARDIM DAS ROSAS,6º Ano,A,Miro Carvalho,ALYCE VITORIA,,Abaixo do Básico,,Básico,45,30,&#10;E.E. AFONSO MORENO,1ª Série,B,Prof. Souza,Ana Costa,,Proficiente,,Proficiente,85,90,"></textarea>
+        <textarea id="bulkData" rows="6" placeholder="JARDIM DAS ROSAS,6° Ano,A,Miro Carvalho,ALYCE VITORIA,,Abaixo do Básico,,Básico,45,30,&#10;AFONSO MORENO,1ª Série,B,Prof. Souza,Ana Costa,,Proficiente,,Proficiente,85,90,"></textarea>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn" onclick="inserirEmLote()"><i class="fas fa-database"></i> Inserir em Lote</button>
@@ -223,7 +223,7 @@
     </div>
 
     <div class="card">
-      <h3><i class="fas fa-database"></i> Registros (CRUD completo)</h3>
+      <h3><i class="fas fa-database"></i> Registros</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -321,7 +321,7 @@ const firebaseConfig = {
     "WALTHER WEISZFLOG",
     "ZILTON BICUDO PROF"
   ];
-  const anosSeries = ["5º Ano","6º Ano","7º Ano","8º Ano","9º Ano","1ª Série","2ª Série","3ª Série"];
+  const anosSeries = ["5° Ano","6° Ano","7° Ano","8° Ano","9° Ano","1ª Série","2ª Série","3ª Série"];
   const turmasLista = ["A","B","C","D","E","F","G","H"];
 
   function initDropdowns() {
