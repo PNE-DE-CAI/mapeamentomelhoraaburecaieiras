@@ -1,332 +1,367 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Educacional URE-CAIEIRAS</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        body { background-color: #f4f7fc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .tab-content { background: white; padding: 25px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6; border-top: none; }
-        .nav-tabs .nav-link { font-weight: bold; color: #0a4b6e; }
-        .nav-tabs .nav-link.active { background-color: #0a4b6e; color: white; border-color: #0a4b6e; }
-        .dashboard-card { border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); transition: 0.2s; }
-        .farol-verde { background-color: #28a745; color: white; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
-        .farol-amarelo { background-color: #ffc107; color: #333; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
-        .farol-vermelho { background-color: #dc3545; color: white; border-radius: 20px; padding: 4px 12px; font-weight: bold; display: inline-block; }
-        table th { background-color: #e9ecef; }
-        .btn-crud { margin: 2px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URE-CAIEIRAS | Observação de Melhora Educacional</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --primary: #1a56db; --bg: #f3f4f6; --card: #fff; --text: #1f2937; --red: #ef4444; --yellow: #eab308; --green: #22c55e; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: #fff; padding: 1rem; text-align: center; }
+    nav { display: flex; justify-content: center; gap: 1rem; padding: 0.5rem; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    nav button { background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: #6b7280; }
+    nav button.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+    main { padding: 1rem; max-width: 1200px; margin: auto; }
+    .tab { display: none; } .tab.active { display: block; }
+    .card { background: var(--card); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .kpi { text-align: center; padding: 0.8rem; background: #f8fafc; border-radius: 6px; }
+    .kpi h3 { margin: 0; font-size: 0.9rem; color: #64748b; }
+    .kpi p { margin: 0.5rem 0 0; font-size: 1.5rem; font-weight: bold; }
+    .farol { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+    .f-verde { background: var(--green); } .f-amarelo { background: var(--yellow); } .f-vermelho { background: var(--red); }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+    th, td { padding: 0.6rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #f1f5f9; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem; }
+    input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; }
+    .btn { background: var(--primary); color: #fff; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; margin-top: 0.5rem; }
+    .btn:hover { opacity: 0.9; } .btn-del { background: var(--red); }
+    .badge { padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+    .bg-abixo { background: var(--red); } .bg-basico { background: var(--yellow); color: #333; } .bg-adequado { background: var(--green); } .bg-avancado { background: #3b82f6; }
+    .info-box { background: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 0.8rem; margin: 1rem 0; border-radius: 4px; font-size: 0.9rem; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 1rem; border-radius: 8px; display: none; z-index: 999; }
+  </style>
 </head>
 <body>
-<div class="container my-4">
-    <h2 class="text-center mb-4" style="color: #0a4b6e;"><i class="fas fa-chalkboard-teacher"></i> Observatório Educacional URE-CAIEIRAS</h2>
-    
-    <!-- Abas -->
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">📊 Dashboard de Melhora</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta" type="button" role="tab">📝 Meta Análise (CRUD)</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <!-- DASHBOARD -->
-        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
-            <div class="row mb-4">
-                <div class="col-md-3"><label>Escola</label><select id="filtroEscola" class="form-select"></select></div>
-                <div class="col-md-3"><label>Ano/Série</label><select id="filtroAno" class="form-select"></select></div>
-                <div class="col-md-3"><label>Turma</label><select id="filtroTurma" class="form-select"></select></div>
-                <div class="col-md-3"><label>Professor</label><input type="text" id="filtroProfessor" class="form-control" placeholder="Filtrar professor"></div>
-            </div>
-            <div id="dashboardResumo" class="alert alert-info">Selecione filtros para visualizar os faróis de evolução.</div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="tabelaDashboard">
-                    <thead class="table-dark">
-                        <tr><th>Estudante</th><th>Escola</th><th>Ano/Turma</th><th>ADD LP</th><th>PP LP (%)</th><th>Equivalência LP</th><th>ADD MT</th><th>PP MT (%)</th><th>Equivalência MT</th><th>Farol LP</th><th>Farol MT</th><th>Perfil Turma</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- META ANÁLISE (CRUD) -->
-        <div class="tab-pane fade" id="meta" role="tabpanel">
-            <div class="d-flex justify-content-between mb-3">
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalRegistro"><i class="fas fa-plus"></i> Novo Registro</button>
-                <button class="btn btn-primary" id="btnImportarCSV"><i class="fas fa-file-import"></i> Importar CSV</button>
-                <input type="file" id="csvFile" accept=".csv" style="display:none">
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped" id="tabelaMeta">
-                    <thead class="table-secondary"><tr><th>Nome</th><th>Escola</th><th>Ano</th><th>Turma</th><th>Professor</th><th>Status ADD LP</th><th>PP LP %</th><th>Status ADD MT</th><th>PP MT %</th><th>Ações</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modal CRUD -->
-<div class="modal fade" id="modalRegistro" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Registro de Estudante</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="formRegistro">
-                    <input type="hidden" id="idRegistro">
-                    <div class="row">
-                        <div class="col-md-6 mb-2"><label>Nome do Estudante*</label><input type="text" id="nome" class="form-control" required></div>
-                        <div class="col-md-6 mb-2"><label>Escola*</label><select id="escola" class="form-select" required></select></div>
-                        <div class="col-md-3 mb-2"><label>Ano/Série*</label><select id="anoSerie" class="form-select" required><option>5°Ano</option><option>6°Ano</option><option>7°Ano</option><option>8°Ano</option><option>9°Ano</option><option>1ª Série</option><option>2ª Série</option><option>3ª Série</option></select></div>
-                        <div class="col-md-3 mb-2"><label>Turma*</label><select id="turma" class="form-select" required><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
-                        <div class="col-md-6 mb-2"><label>Professor</label><input type="text" id="professor" class="form-control"></div>
-                        <div class="col-md-3 mb-2"><label>ADD LP (status)</label><select id="addLP" class="form-select"><option>Abaixo do básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select></div>
-                        <div class="col-md-3 mb-2"><label>PP LP (%)</label><input type="number" id="ppLP" step="any" class="form-control"></div>
-                        <div class="col-md-3 mb-2"><label>ADD MT (status)</label><select id="addMT" class="form-select"><option>Abaixo do básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select></div>
-                        <div class="col-md-3 mb-2"><label>PP MT (%)</label><input type="number" id="ppMT" step="any" class="form-control"></div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" id="salvarRegistro" class="btn btn-primary">Salvar</button></div>
-        </div>
-    </div>
-</div>
+<header>
+  <h2>URE-CAIEIRAS | Sistema de Observação de Melhora Educacional</h2>
+  <small>Comparação: Avaliação Diagnóstica Digital vs Prova Paulista (1º Bimestre)</small>
+</header>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<nav>
+  <button class="active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+  <button onclick="switchTab('meta')">📝 Meta-Análise (CRUD)</button></nav>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="tab active">
+    <div class="info-box">
+      <strong>📌 Correlação Pedagógica (Referência SEE-SP):</strong>
+      <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0;">
+        <li>6º Ano "Abaixo do Básico" ≈ Equivalente a 1º/2º Ano do Fundamental</li>
+        <li>1ª Série EM "Abaixo do Básico" ≈ Aprendizagem consolidada abaixo do 6º Ano</li>
+      </ul>
+    </div>
+
+    <div class="form-grid" style="margin-bottom: 1rem;">
+      <select id="filterEscola" onchange="loadDashboard()"><option value="">Todas as Escolas</option></select>
+      <select id="filterAno" onchange="loadDashboard()"><option value="">Todos os Anos/Séries</option></select>
+      <select id="filterTurma" onchange="loadDashboard()"><option value="">Todas as Turmas</option></select>
+    </div>
+
+    <div class="grid-4" id="kpiContainer">
+      <div class="kpi"><h3>Total Alunos</h3><p id="kpiTotal">-</p></div>
+      <div class="kpi"><h3>Abaixo do Básico</h3><p id="kpiAbaixo">-</p></div>
+      <div class="kpi"><h3>🟢 Melhora | 🟡 Estagnou | 🔴 Piora</h3><p id="kpiFarol">-</p></div>
+      <div class="kpi"><h3>Perfil Turma (>50% Abaixo)</h3><p id="kpiPerfil">-</p></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card"><h3>Distribuição de Status ADD</h3><canvas id="chartStatus"></canvas></div>
+      <div class="card"><h3>Evolução Prova Paulista (LP vs MT)</h3><canvas id="chartPP"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>📋 Detalhamento por Estudante</h3>
+      <table>
+        <thead><tr><th>Escola/Turma</th><th>Estudante</th><th>ADD LP</th><th>ADD MT</th><th>Farol LP</th><th>Farol MT</th><th>PP LP%</th><th>PP MT%</th></tr></thead>
+        <tbody id="dashTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- META-ANÁLISE -->
+  <section id="meta" class="tab">
+    <div class="card">
+      <h3 id="formTitle">Novo Registro</h3>
+      <form id="studentForm" class="form-grid">
+        <input type="hidden" id="docId">
+        <select id="sEscola" required><option value="">Selecione a Escola</option></select>
+        <select id="sAno" required><option value="">Ano/Série</option></select>
+        <select id="sTurma" required><option value="">Turma</option></select>
+        <input type="text" id="sProfessor" placeholder="Nome do Professor" required>        <input type="text" id="sNome" placeholder="Nome do Estudante" required>
+        <input type="text" id="sAddLPeq" placeholder="Equivalência LP (ex: 1º ano)">
+        <select id="sAddLPstatus"><option>Abaixo do Básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select>
+        <input type="text" id="sAddMTeq" placeholder="Equivalência MT (ex: 2º ano)">
+        <select id="sAddMTstatus"><option>Abaixo do Básico</option><option>Básico</option><option>Adequado</option><option>Avançado</option></select>
+        <input type="number" id="sPPLP" min="0" max="100" step="0.1" placeholder="Prova Paulista LP (%)">
+        <input type="number" id="sPPMT" min="0" max="100" step="0.1" placeholder="Prova Paulista MT (%)">
+        <div class="form-grid" style="grid-column: 1/-1;">
+          <input type="text" id="sPerfil" placeholder="Perfil Turma (>50% Abaixo? Sim/Não)" readonly>
+          <textarea id="sObs" placeholder="Observações" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn">💾 Salvar Registro</button>
+        <button type="button" class="btn" style="background:#64748b" onclick="resetForm()">Limpar</button>
+      </form>
+      <div style="margin-top:1rem; display:flex; gap:0.5rem; align-items:center;">
+        <input type="file" id="csvFile" accept=".csv">
+        <button class="btn" onclick="importCSV()">📥 Importar CSV</button>
+        <small style="color:#666;">Formato: escola,ano,turma,professor,nome,eqLP,statLP,eqMT,statMT,ppLP,ppMT,obs</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📑 Registros Cadastrados</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Escola</th><th>Ano</th><th>Turma</th><th>Professor</th><th>Estudante</th><th>Stat LP</th><th>Stat MT</th><th>PP LP%</th><th>PP MT%</th><th>Ações</th></tr></thead>
+          <tbody id="crudTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    // ================= CONFIGURAÇÃO DO FIREBASE =================
-    // Substitua pelos dados do seu projeto Firebase (crie um projeto novo no console.firebase.google.com)
-    const firebaseConfig = {
-        apiKey: "SUA_API_KEY",
-        authDomain: "SEU_PROJETO.firebaseapp.com",
-        projectId: "SEU_PROJETO",
-        storageBucket: "SEU_PROJETO.appspot.com",
-        messagingSenderId: "NUMERO",
-        appId: "SEU_APP_ID"
+  // 🔧 CONFIGURAÇÃO FIREBASE (SUBSTITUA PELOS SEUS DADOS)
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SEU_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // 📦 DADOS SUSPENSOS
+  const escolas = [    "CARLOS AUGUSTO DE PADUA FLEURY PROF","PEDRO GALRAO DO NASCIMENTO","WALTHER WEISZFLOG","FRANCISCO GONCALVES VIEIRA PROF",
+    "JOSE ROBERTO MELCHIOR DR","WALTER RIBAS DE ANDRADE PROF EE","ALFRIED THEODOR WEISZFLOG","ELCIO JOSE PEREIRA COTRIM PROF",
+    "JOAQUIM MARQUES DA SILVA SOBRINHO TTE","ODARICO OLIVEIRA NASCIMENTO PROF","JOSE PARADA PROFESSOR","NAIR HANNICKEL ROMARO",
+    "NIDE ZAIM CARDOSO PROFA","LENITA CORREA CAMARGO PROFA","JARDIM SAO FRANCISCO","DOMINGOS CAMBIAGHI PROF","ARTHUR WEINGRILL",
+    "OTTO WEISZFLOG","HERMELINA DE ALBUQUERQUE PASSARELLA PROFA","ULYSSES SANCHES RAMIRES PROF","ARMANDO SESTINI",
+    "PEDRO PAULO DE AGUIAR","ALBINO FIORE","OZILDE ALBUQUERQUE PASSARELLA DR","ELVIRA PARADA MANGA PROFA","ALADINO POLON",
+    "LYDIA SCALET WALKER PROFA","BENEDITO FAGUNDES MARQUES","BUENO DE AZEVEDO FILHO PROF","ALBERTO GRAF CAPITAO",
+    "MARIA ZEZA GOMES DE OLIVEIRA","JOSE CARLOS DA SILVA JUNIOR","BELEM DA SERRA","IRACI SARTORI VIEIRA DA SILVA PROFA",
+    "VINCENZO LOBASSI","APARECIDO ROBERTO TONELLOTTI PROFESSOR","BENEDITO APARECIDO TAVARES PROF","CHACARA CAMPONESA JARDIM VASSOURAS",
+    "JOSE DE BARROS MARTINS EDITOR","BAIRRO JUNDIAIZINHO","DR. NELSON MANZANARES","ADAIL JARBAS DUCLOS","OLINDO DARTORA DR",
+    "JARDIM SILVIA II","PAULO DUARTE","LUIZ ALEXANDRE DOS SANTOS VEREADOR","ZILTON BICUDO PROF","DR. MARIO TOLEDO DE MORAES",
+    "ISAURA VALENTINI HANSER PROFA","SUZANA DIAS","ANA MARIA GARRIDO ORLANDIN PROFA","JARDIM ALEGRIA II","ROGERIO LEVORIN PROF",
+    "IVONE DOS ANJOS DA SILVA CAMPOS e PROFA","ISAURA DE MIRANDA BOTTO PROFA","PIETRO PETRI","PARQUE CENTO E VINTE II",
+    "JARDIM DAS ROSAS","RITUCO MITANI PROFA","CELESTINA VALENTE LENGENFELDER PROFA","AZEVEDO SOARES","PEDRO LELIS DE SOUZA PREFEITO",
+    "BAIRRO DO ITAIM","AFONSO MORENO","JOCIMARA VIEIRA DA SILVA PROFA","ISAIAS LUIZ MATIAZZO","KATIA MARIA TARIFA LEME TONELLI PROFA"
+  ];
+  const anos = ["5º Ano","6º Ano","7º Ano","8º Ano","9º Ano","1ª Série","2ª Série","3ª Série"];
+  const turmas = ["A","B","C","D","E","F","G","H"];
+
+  // 🎨 INICIALIZAÇÃO SUSPENSAS
+  function initDropdowns() {
+    const fill = (id, arr) => { arr.forEach(v => document.getElementById(id).innerHTML += `<option value="${v}">${v}</option>`); };
+    ['sEscola','filterEscola'].forEach(id => fill(id, escolas));
+    ['sAno','filterAno'].forEach(id => fill(id, anos));
+    ['sTurma','filterTurma'].forEach(id => fill(id, turmas));
+  }
+
+  // 🚦 LÓGICA DO FAROL
+  function getFarol(addStatus, ppPct) {
+    if(ppPct === null || ppPct === undefined || ppPct === "") return { cor: 'gray', texto: 'S/D' };
+    ppPct = parseFloat(ppPct);
+    const ordem = ["Abaixo do Básico","Básico","Adequado","Avançado"];
+    const faixas = { "Abaixo do Básico": [0,29], "Básico": [30,49], "Adequado": [50,69], "Avançado": [70,100] };
+    
+    let idxEsperado = ordem.indexOf(addStatus) || 0;
+    let idxReal = 3;
+    if(ppPct < 30) idxReal = 0; else if(ppPct < 50) idxReal = 1; else if(ppPct < 70) idxReal = 2; else idxReal = 3;
+
+    if(idxReal > idxEsperado) return { cor: 'f-verde', texto: 'Melhora' };
+    if(idxReal < idxEsperado) return { cor: 'f-vermelho', texto: 'Piora' };
+    return { cor: 'f-amarelo', texto: 'Estagnou' };
+  }
+
+  // 📊 DASHBOARD
+  let chartStatus, chartPP;
+  async function loadDashboard() {
+    const esc = document.getElementById('filterEscola').value;
+    const ano = document.getElementById('filterAno').value;
+    const turma = document.getElementById('filterTurma').value;
+    let ref = db.collection('ure_caieiras');
+    if(esc) ref = ref.where('escola', '==', esc);
+    if(ano) ref = ref.where('anoSerie', '==', ano);
+    if(turma) ref = ref.where('turma', '==', turma);
+
+    const snap = await ref.get();
+    const data = [];
+    let abaixoCount = 0, melhora=0, estag=0, piora=0, total=snap.size;
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      const flp = getFarol(d.addLPstatus, d.ppLP);
+      const fmt = getFarol(d.addMTstatus, d.ppMT);
+      d.farolLP = flp; d.farolMT = fmt;
+      data.push(d);
+      if(d.addLPstatus === "Abaixo do Básico" || d.addMTstatus === "Abaixo do Básico") abaixoCount++;
+      if(flp.cor === 'f-verde' || fmt.cor === 'f-verde') melhora++;
+      else if(flp.cor === 'f-vermelho' || fmt.cor === 'f-vermelho') piora++;
+      else estag++;
+    });
+
+    const perfil = abaixoCount > (total * 0.5) ? "Sim (Crítico)" : "Não (Estável)";
+    document.getElementById('kpiTotal').innerText = total;
+    document.getElementById('kpiAbaixo').innerText = `${abaixoCount} (${total?Math.round((abaixoCount/total)*100):0}%)`;
+    document.getElementById('kpiFarol').innerHTML = `<span class="farol f-verde"></span>${melhora} <span class="farol f-amarelo"></span>${estag} <span class="farol f-vermelho"></span>${piora}`;
+    document.getElementById('kpiPerfil').innerText = perfil;
+    document.getElementById('kpiPerfil').style.color = perfil.includes('Sim') ? 'var(--red)' : 'var(--green)';
+
+    // Tabela
+    const tbody = document.getElementById('dashTableBody');
+    tbody.innerHTML = data.map(d => `
+      <tr>
+        <td>${d.escola}<br><small>${d.anoSerie} - ${d.turma}</small></td>
+        <td>${d.nome}</td>
+        <td>${d.addLPeq} (${d.addLPstatus})</td>
+        <td>${d.addMTeq} (${d.addMTstatus})</td>
+        <td><span class="farol ${d.farolLP.cor}"></span>${d.farolLP.texto}</td>
+        <td><span class="farol ${d.farolMT.cor}"></span>${d.farolMT.texto}</td>
+        <td>${d.ppLP}%</td><td>${d.ppMT}%</td>
+      </tr>
+    `).join('');
+
+    // Gráficos
+    const statusCount = { "Abaixo do Básico":0, "Básico":0, "Adequado":0, "Avançado":0 };
+    data.forEach(d => { statusCount[d.addLPstatus]++; statusCount[d.addMTstatus]++; });
+    
+    if(chartStatus) chartStatus.destroy();
+    if(chartPP) chartPP.destroy();
+    chartStatus = new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',      data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#ef4444','#eab308','#22c55e','#3b82f6'] }] }
+    });
+    chartPP = new Chart(document.getElementById('chartPP'), {
+      type: 'bar',
+      data: { labels: data.map(d=>d.nome.substring(0,15)), datasets: [{ label:'LP%', data:data.map(d=>d.ppLP||0), backgroundColor:'#1a56db' }, { label:'MT%', data:data.map(d=>d.ppMT||0), backgroundColor:'#f59e0b' }] }
+    });
+  }
+
+  // 📝 CRUD
+  const form = document.getElementById('studentForm');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const docId = document.getElementById('docId').value;
+    const payload = {
+      escola: document.getElementById('sEscola').value,
+      anoSerie: document.getElementById('sAno').value,
+      turma: document.getElementById('sTurma').value,
+      professor: document.getElementById('sProfessor').value,
+      nome: document.getElementById('sNome').value,
+      addLPeq: document.getElementById('sAddLPeq').value,
+      addLPstatus: document.getElementById('sAddLPstatus').value,
+      addMTeq: document.getElementById('sAddMTeq').value,
+      addMTstatus: document.getElementById('sAddMTstatus').value,
+      ppLP: document.getElementById('sPPLP').value,
+      ppMT: document.getElementById('sPPMT').value,
+      perfil: document.getElementById('sPerfil').value,
+      obs: document.getElementById('sObs').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    
-    // Lista de escolas (conforme fornecida)
-    const escolasLista = [
-        "CARLOS AUGUSTO DE PADUA FLEURY PROF", "PEDRO GALRAO DO NASCIMENTO", "WALTHER WEISZFLOG", "FRANCISCO GONCALVES VIEIRA PROF", "JOSE ROBERTO MELCHIOR DR",
-        "WALTER RIBAS DE ANDRADE PROF EE", "ALFRIED THEODOR WEISZFLOG", "ELCIO JOSE PEREIRA COTRIM PROF", "JOAQUIM MARQUES DA SILVA SOBRINHO TTE", "ODARICO OLIVEIRA NASCIMENTO PROF",
-        "JOSE PARADA PROFESSOR", "NAIR HANNICKEL ROMARO", "NIDE ZAIM CARDOSO PROFA", "LENITA CORREA CAMARGO PROFA", "JARDIM SAO FRANCISCO",
-        "DOMINGOS CAMBIAGHI PROF", "ARTHUR WEINGRILL", "OTTO WEISZFLOG", "HERMELINA DE ALBUQUERQUE PASSARELLA PROFA", "ULYSSES SANCHES RAMIRES PROF",
-        "ARMANDO SESTINI", "PEDRO PAULO DE AGUIAR", "ALBINO FIORE", "OZILDE ALBUQUERQUE PASSARELLA DR", "ELVIRA PARADA MANGA PROFA",
-        "ALADINO POLON", "LYDIA SCALET WALKER PROFA", "BENEDITO FAGUNDES MARQUES", "BUENO DE AZEVEDO FILHO PROF", "ALBERTO GRAF CAPITAO",
-        "MARIA ZEZA GOMES DE OLIVEIRA", "JOSE CARLOS DA SILVA JUNIOR", "BELEM DA SERRA", "IRACI SARTORI VIEIRA DA SILVA PROFA", "VINCENZO LOBASSI",
-        "APARECIDO ROBERTO TONELLOTTI PROFESSOR", "BENEDITO APARECIDO TAVARES PROF", "CHACARA CAMPONESA JARDIM VASSOURAS", "JOSE DE BARROS MARTINS EDITOR", "BAIRRO JUNDIAIZINHO",
-        "DR. NELSON MANZANARES", "ADAIL JARBAS DUCLOS", "OLINDO DARTORA DR", "JARDIM SILVIA II", "PAULO DUARTE",
-        "LUIZ ALEXANDRE DOS SANTOS VEREADOR", "ZILTON BICUDO PROF", "DR. MARIO TOLEDO DE MORAES", "ISAURA VALENTINI HANSER PROFA", "SUZANA DIAS",
-        "ANA MARIA GARRIDO ORLANDIN PROFA", "JARDIM ALEGRIA II", "ROGERIO LEVORIN PROF", "IVONE DOS ANJOS DA SILVA CAMPOS e PROFA", "ISAURA DE MIRANDA BOTTO PROFA",
-        "PIETRO PETRI", "PARQUE CENTO E VINTE II", "JARDIM DAS ROSAS", "RITUCO MITANI PROFA", "CELESTINA VALENTE LENGENFELDER PROFA",
-        "AZEVEDO SOARES", "PEDRO LELIS DE SOUZA PREFEITO", "BAIRRO DO ITAIM", "AFONSO MORENO", "JOCIMARA VIEIRA DA SILVA PROFA",
-        "ISAIAS LUIZ MATIAZZO", "KATIA MARIA TARIFA LEME TONELLI PROFA"
-    ];
-    
-    // Função auxiliar: equivalência de aprendizagem para ADD (se sexto ano e abaixo do básico)
-    function calcularEquivalencia(anoSerie, statusADD) {
-        if (anoSerie === "6°Ano" && statusADD === "Abaixo do básico") return "1°/2° ano";
-        if (anoSerie === "1ª Série" && statusADD === "Abaixo do básico") return "5° ano (equivalente abaixo do 6°)";
-        return statusADD; // ou manter o status original para outros casos
-    }
-    
-    // Converter % PP em status qualitativo (escala padrão)
-    function percentualParaStatus(pct) {
-        if (pct === undefined || pct === "") return "Sem dado";
-        if (pct < 35) return "Abaixo do básico";
-        if (pct < 60) return "Básico";
-        if (pct < 80) return "Adequado";
-        return "Avançado";
-    }
-    
-    // Determinar farol baseado na comparação entre status ADD e status da PP (convertido)
-    function calcularFarol(statusADD, percentualPP) {
-        if (percentualPP === undefined || percentualPP === "") return "Sem dado";
-        const statusPP = percentualParaStatus(percentualPP);
-        const ordem = {"Abaixo do básico":1, "Básico":2, "Adequado":3, "Avançado":4};
-        const valADD = ordem[statusADD] || 0;
-        const valPP = ordem[statusPP] || 0;
-        if (valPP > valADD) return "verde";
-        if (valPP === valADD) return "amarelo";
-        return "vermelho";
-    }
-    
-    // Calcular perfil inicial da turma (>50% abaixo do básico na ADD)
-    async function atualizarPerfilTurma(escola, ano, turma) {
-        const snapshot = await db.collection("metaAnalise").where("escola", "==", escola).where("anoSerie", "==", ano).where("turma", "==", turma).get();
-        let total = 0, abaixoLP = 0, abaixoMT = 0;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            total++;
-            if (data.addLP === "Abaixo do básico") abaixoLP++;
-            if (data.addMT === "Abaixo do básico") abaixoMT++;
-        });
-        const percLP = total ? (abaixoLP/total)*100 : 0;
-        const percMT = total ? (abaixoMT/total)*100 : 0;
-        const statusLP = percLP > 50 ? "Sim (LP)" : "Não";
-        const statusMT = percMT > 50 ? "Sim (MT)" : "Não";
-        return { LP: statusLP, MT: statusMT };
-    }
-    
-    // CARREGAR DASHBOARD com filtros
-    async function carregarDashboard() {
-        const escola = document.getElementById("filtroEscola").value;
-        const ano = document.getElementById("filtroAno").value;
-        const turma = document.getElementById("filtroTurma").value;
-        const professor = document.getElementById("filtroProfessor").value.toLowerCase();
-        let query = db.collection("metaAnalise");
-        if (escola) query = query.where("escola", "==", escola);
-        if (ano) query = query.where("anoSerie", "==", ano);
-        if (turma) query = query.where("turma", "==", turma);
-        const snapshot = await query.get();
-        const tbody = document.querySelector("#tabelaDashboard tbody");
-        tbody.innerHTML = "";
-        let registros = [];
-        snapshot.forEach(doc => registros.push({id:doc.id, ...doc.data()}));
-        if(professor) registros = registros.filter(r => r.professor && r.professor.toLowerCase().includes(professor));
-        
-        for(const reg of registros){
-            const eqLP = calcularEquivalencia(reg.anoSerie, reg.addLP);
-            const eqMT = calcularEquivalencia(reg.anoSerie, reg.addMT);
-            const farolLP = calcularFarol(reg.addLP, reg.ppLP);
-            const farolMT = calcularFarol(reg.addMT, reg.ppMT);
-            const perfil = await atualizarPerfilTurma(reg.escola, reg.anoSerie, reg.turma);
-            const row = `<tr>
-                <td>${reg.nome}</td><td>${reg.escola}</td><td>${reg.anoSerie} - ${reg.turma}</td>
-                <td>${reg.addLP}</td><td>${reg.ppLP??'-'}</td><td>${eqLP}</td>
-                <td>${reg.addMT}</td><td>${reg.ppMT??'-'}</td><td>${eqMT}</td>
-                <td><span class="farol-${farolLP}">● ${farolLP.toUpperCase()}</span></td>
-                <td><span class="farol-${farolMT}">● ${farolMT.toUpperCase()}</span></td>
-                <td>LP:${perfil.LP} / MT:${perfil.MT}</td>
-            </tr>`;
-            tbody.insertAdjacentHTML('beforeend', row);
-        }
-        document.getElementById("dashboardResumo").innerHTML = `Total de estudantes: ${registros.length}`;
-    }
-    
-    // CRUD: listar na aba Meta
-    async function listarMetaAnalise() {
-        const snapshot = await db.collection("metaAnalise").orderBy("nome").get();
-        const tbody = document.querySelector("#tabelaMeta tbody");
-        tbody.innerHTML = "";
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            const row = `<tr>
-                <td>${d.nome}</td><td>${d.escola}</td><td>${d.anoSerie}</td><td>${d.turma}</td><td>${d.professor || ''}</td>
-                <td>${d.addLP}</td><td>${d.ppLP??''}</td><td>${d.addMT}</td><td>${d.ppMT??''}</td>
-                <td><button class="btn btn-sm btn-warning btn-crud" onclick="editarRegistro('${doc.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger btn-crud" onclick="excluirRegistro('${doc.id}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-            tbody.insertAdjacentHTML('beforeend', row);
-        });
-    }
-    
-    // Salvar (create/update)
-    document.getElementById("salvarRegistro").onclick = async () => {
-        const id = document.getElementById("idRegistro").value;
-        const dados = {
-            nome: document.getElementById("nome").value,
-            escola: document.getElementById("escola").value,
-            anoSerie: document.getElementById("anoSerie").value,
-            turma: document.getElementById("turma").value,
-            professor: document.getElementById("professor").value,
-            addLP: document.getElementById("addLP").value,
-            ppLP: parseFloat(document.getElementById("ppLP").value) || null,
-            addMT: document.getElementById("addMT").value,
-            ppMT: parseFloat(document.getElementById("ppMT").value) || null
-        };
-        if (!dados.nome) return alert("Nome obrigatório");
-        if (id) await db.collection("metaAnalise").doc(id).update(dados);
-        else await db.collection("metaAnalise").add(dados);
-        bootstrap.Modal.getInstance(document.getElementById("modalRegistro")).hide();
-        listarMetaAnalise();
-        carregarDashboard();
-    };
-    
-    window.editarRegistro = async (id) => {
-        const doc = await db.collection("metaAnalise").doc(id).get();
+    try {
+      if(docId) await db.collection('ure_caieiras').doc(docId).update(payload);
+      else await db.collection('ure_caieiras').add(payload);
+      showToast("✅ Salvo com sucesso!");
+      resetForm();
+      loadCRUD();
+    } catch(err) { console.error(err); showToast("❌ Erro ao salvar: " + err.message); }
+  });
+
+  function loadCRUD() {
+    db.collection('ure_caieiras').orderBy('updatedAt','desc').limit(500).get().then(snap => {
+      const tbody = document.getElementById('crudTableBody');
+      tbody.innerHTML = snap.docs.map(doc => {
         const d = doc.data();
-        document.getElementById("idRegistro").value = id;
-        document.getElementById("nome").value = d.nome;
-        document.getElementById("escola").value = d.escola;
-        document.getElementById("anoSerie").value = d.anoSerie;
-        document.getElementById("turma").value = d.turma;
-        document.getElementById("professor").value = d.professor || "";
-        document.getElementById("addLP").value = d.addLP;
-        document.getElementById("ppLP").value = d.ppLP || "";
-        document.getElementById("addMT").value = d.addMT;
-        document.getElementById("ppMT").value = d.ppMT || "";
-        new bootstrap.Modal(document.getElementById("modalRegistro")).show();
-    };
-    
-    window.excluirRegistro = async (id) => {
-        if(confirm("Excluir permanentemente?")) {
-            await db.collection("metaAnalise").doc(id).delete();
-            listarMetaAnalise();
-            carregarDashboard();
-        }
-    };
-    
-    // Importar CSV
-    document.getElementById("btnImportarCSV").onclick = () => document.getElementById("csvFile").click();
-    document.getElementById("csvFile").onchange = async (e) => {
-        const file = e.target.files[0];
-        const text = await file.text();
-        const linhas = text.split("\n").slice(1); // pula cabeçalho
-        for(let linha of linhas) {
-            const cols = linha.split(",");
-            if(cols.length < 9) continue;
-            const dados = {
-                nome: cols[0]?.trim(),
-                escola: cols[1]?.trim(),
-                anoSerie: cols[2]?.trim(),
-                turma: cols[3]?.trim(),
-                professor: cols[4]?.trim(),
-                addLP: cols[5]?.trim(),
-                ppLP: parseFloat(cols[6]) || null,
-                addMT: cols[7]?.trim(),
-                ppMT: parseFloat(cols[8]) || null
-            };
-            if(dados.nome && escolasLista.includes(dados.escola)) await db.collection("metaAnalise").add(dados);
-        }
-        alert("Importação concluída!");
-        listarMetaAnalise();
-        carregarDashboard();
-    };
-    
-    // Preencher selects e eventos
-    function preencherSelects() {
-        const escolaSelects = [document.getElementById("escola"), document.getElementById("filtroEscola")];
-        escolaSelects.forEach(sel => { sel.innerHTML = `<option value="">Todas</option>`+escolasLista.map(e=>`<option>${e}</option>`).join(""); });
-        const anos = ["5°Ano","6°Ano","7°Ano","8°Ano","9°Ano","1ª Série","2ª Série","3ª Série"];
-        const filtroAno = document.getElementById("filtroAno");
-        filtroAno.innerHTML = `<option value="">Todos</option>`+anos.map(a=>`<option>${a}</option>`).join("");
-        const turmaSelect = document.getElementById("filtroTurma");
-        turmaSelect.innerHTML = `<option value="">Todas</option>`+["A","B","C","D","E","F","G","H"].map(t=>`<option>${t}</option>`).join("");
+        return `<tr>
+          <td>${d.escola}</td><td>${d.anoSerie}</td><td>${d.turma}</td><td>${d.professor}</td>
+          <td>${d.nome}</td><td class="bg-${d.addLPstatus.toLowerCase().replace(/ /g,'').replace('á','a').replace('ó','o')}">${d.addLPstatus}</td>
+          <td class="bg-${d.addMTstatus.toLowerCase().replace(/ /g,'').replace('á','a').replace('ó','o')}">${d.addMTstatus}</td>
+          <td>${d.ppLP}%</td><td>${d.ppMT}%</td>
+          <td><button class="btn" onclick="editDoc('${doc.id}')" style="padding:0.3rem">✏️</button> <button class="btn btn-del" onclick="delDoc('${doc.id}')" style="padding:0.3rem">🗑️</button></td>
+        </tr>`;      }).join('');
+    });
+  }
+
+  async function editDoc(id) {
+    const snap = await db.collection('ure_caieiras').doc(id).get();
+    const d = snap.data();
+    document.getElementById('docId').value = id;
+    document.getElementById('sEscola').value = d.escola;
+    document.getElementById('sAno').value = d.anoSerie;
+    document.getElementById('sTurma').value = d.turma;
+    document.getElementById('sProfessor').value = d.professor;
+    document.getElementById('sNome').value = d.nome;
+    document.getElementById('sAddLPeq').value = d.addLPeq || "";
+    document.getElementById('sAddLPstatus').value = d.addLPstatus;
+    document.getElementById('sAddMTeq').value = d.addMTeq || "";
+    document.getElementById('sAddMTstatus').value = d.addMTstatus;
+    document.getElementById('sPPLP').value = d.ppLP || "";
+    document.getElementById('sPPMT').value = d.ppMT || "";
+    document.getElementById('sObs').value = d.obs || "";
+    document.getElementById('sPerfil').value = d.perfil || "";
+    document.getElementById('formTitle').innerText = "Editando Registro";
+    window.scrollTo(0,0);
+  }
+
+  function delDoc(id) {
+    if(confirm("Excluir registro?")) {
+      db.collection('ure_caieiras').doc(id).delete().then(() => { showToast("🗑️ Excluído!"); loadCRUD(); loadDashboard(); });
     }
-    
-    // Listeners de filtro
-    document.getElementById("filtroEscola").addEventListener("change", carregarDashboard);
-    document.getElementById("filtroAno").addEventListener("change", carregarDashboard);
-    document.getElementById("filtroTurma").addEventListener("change", carregarDashboard);
-    document.getElementById("filtroProfessor").addEventListener("input", carregarDashboard);
-    
-    // Inicialização
-    preencherSelects();
-    listarMetaAnalise();
-    carregarDashboard();
+  }
+  function resetForm() { form.reset(); document.getElementById('docId').value = ""; document.getElementById('formTitle').innerText = "Novo Registro"; }
+
+  // 📥 IMPORTAÇÃO CSV
+  async function importCSV() {
+    const file = document.getElementById('csvFile').files[0];
+    if(!file) return showToast("Selecione um CSV");
+    const text = await file.text();
+    const rows = text.split('\n').filter(r=>r.trim()).slice(1); // Skip header
+    const batch = db.batch();
+    let count = 0;
+    rows.forEach(r => {
+      const c = r.split(',');
+      if(c.length < 10) return;
+      const ref = db.collection('ure_caieiras').doc();
+      batch.set(ref, {
+        escola: c[0]?.trim(), anoSerie: c[1]?.trim(), turma: c[2]?.trim(), professor: c[3]?.trim(), nome: c[4]?.trim(),
+        addLPeq: c[5]?.trim(), addLPstatus: c[6]?.trim(), addMTeq: c[7]?.trim(), addMTstatus: c[8]?.trim(),
+        ppLP: c[9]?.trim(), ppMT: c[10]?.trim(), obs: c[11]?.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      count++;    });
+    if(count>0) {
+      try { await batch.commit(); showToast(`✅ ${count} registros importados!`); loadCRUD(); loadDashboard(); }
+      catch(e) { showToast("❌ Erro no batch: " + e.message); }
+    }
+  }
+
+  // 🧩 UTILS
+  function switchTab(id) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    if(id==='dashboard') loadDashboard(); else loadCRUD();
+  }
+  function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+
+  // 🚀 START
+  initDropdowns();
+  loadCRUD();
+  loadDashboard();
 </script>
 </body>
 </html>
